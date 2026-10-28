@@ -136,7 +136,7 @@ def main():
         if path.suffix != ".md":
             continue
         text = path.read_text()
-        for name in wikilib.links(text):
+        for name in dict.fromkeys(wikilib.links(text)):
             if name not in targets:
                 errors.append(f"{rel}: 없는 문서 링크 [[{name}]]")
             elif name != path.stem:
