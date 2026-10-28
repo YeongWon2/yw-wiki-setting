@@ -7,6 +7,7 @@ description: "[{{wiki_name}}] 위키를 최신으로 맞춘다(갱신 · sync). 
 
 위키 내용(`wiki/`)은 쓰지 않는다. 받기와 알리기만 한다.
 
+0. **최신 확인:** `python3.14 tools/version.py --force` — main 브랜치인지, origin/main보다 뒤처졌는지, 세팅 최신 릴리스 · 전역 스킬 · Obsidian 플러그인. 아래 1~2를 대부분 이것이 한다.
 1. **받기:** `git pull --rebase`. 충돌이 나면 `git rebase --abort`로 되돌리고, 어느 파일이 어떻게 다른지 보여 준 뒤 멈춘다. force push는 하지 않는다.
 2. **세팅:** `.wiki-setting.toml`의 버전과 세팅 최신 릴리스를 비교한다(`wiki-setting upgrade`, 없으면 `python3.14 <yw-wiki-setting>/scripts/upgrade.py .`). 패치 · 마이너는 반영하고, 메이저는 무엇이 바뀌는지 보여 주고 묻는다. 세팅에 접속할 수 없으면 가진 버전으로 계속하고 그렇게 알린다.
 3. **알리기:**

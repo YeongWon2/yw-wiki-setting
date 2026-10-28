@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3.15 || command -v python3.14 || echo /opt/homebrew/bin/python3.14); \"$PY\" \"$CLAUDE_PROJECT_DIR/tools/version.py\" \"$CLAUDE_PROJECT_DIR\" --hook",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

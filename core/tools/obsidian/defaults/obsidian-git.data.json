@@ -1,0 +1,15 @@
+{
+  "commitMessage": "obsidian: 메모 {{date}}",
+  "autoCommitMessage": "obsidian: 메모 {{date}}",
+  "commitDateFormat": "YYYY-MM-DD HH:mm",
+  "autoSaveInterval": 10,
+  "autoPushInterval": 0,
+  "autoPullInterval": 10,
+  "autoPullOnBoot": true,
+  "disablePush": false,
+  "pullBeforePush": true,
+  "syncMethod": "rebase",
+  "differentIntervalCommitAndPush": false,
+  "disablePopups": false,
+  "showStatusBar": true
+}

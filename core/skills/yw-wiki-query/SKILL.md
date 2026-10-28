@@ -7,7 +7,7 @@ description: "[{{wiki_name}}] 위키에 적힌 내용으로 질문에 답한다(
 
 이 위키의 페이지와 그 근거 원본만 쓴다. 다른 위키나 원본 도구는 사용자가 따로 말할 때만 본다.
 
-1. **시작:** `git pull --rebase`.
+1. **시작:** `python3.14 tools/version.py` (main · 원격 · 세팅 · 플러그인 최신 확인, ⚠면 먼저 알림) 뒤 `git pull --rebase`.
 2. **읽는 순서:** `wiki/index.md` → 질문의 entity(사람 · 조직 · 프로젝트)나 synthesis → Connections를 따라 concept · source · decision. 날짜 질문은 `raw/daily/`(work는 `raw/worklog/`)와 그날의 source도 본다. 필요한 페이지만 연다.
 3. **읽는 법:** `status: superseded` 결정은 `superseded_by`를 따라가 현재 결정을 답한다. `confidence: low`와 `[low confidence]`는 추정이라고 밝힌다. `review/`는 근거로 쓰지 않는다. 질문 대상에 pending 검토 항목이 있으면 "검토 중인 내용이 있음"이라고만 알린다.
 4. **답하는 법:** 첫 줄에 결론. 그 뒤에 근거 `[[페이지]]`와 페이지에 적힌 원본 링크. 위키에 없으면 "위키에 없음"이라고 말하고 지어내지 않는다.

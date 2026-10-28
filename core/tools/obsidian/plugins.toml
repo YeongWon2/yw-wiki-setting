@@ -1,0 +1,15 @@
+# 위키에 까는 Obsidian 커뮤니티 플러그인. tools/plugins.py가 GitHub 릴리스에서 받아 sha256을 확인한 뒤 .obsidian/plugins/<id>/에 둔다.
+# 버전은 나온 지 2주가 지난 안정 릴리스로 고정한다. 플러그인 코드(main.js · styles.css)는 git에 올리지 않는다(.gitignore).
+# 바꿀 때는 이 세팅에서만 바꾸고 upgrade로 내려보낸다.
+
+[plugins.obsidian-git]
+name = "Git"
+repo = "Vinzent03/obsidian-git"
+version = "2.41.1"                # 2026-10-02 릴리스 (2.42.0은 2026-10-18로 2주 안 됨)
+why = "Obsidian에서 사람이 쓴 raw 메모를 원격과 맞춘다: 열 때 pull, 10분마다 커밋 · pull · push"
+defaults = "obsidian-git.data.json"  # 처음 깔 때만 .obsidian/plugins/obsidian-git/data.json으로
+
+[plugins.obsidian-git.sha256]
+"main.js" = "28a18afcab1d2f152a0d3c89aff38e2a97ad0be1aeaaf99630613233bbec6c1b"
+"manifest.json" = "5d4d0f411518636c1d2a4831425a8e3487b925b5bd413be0ca22e6de38a593f7"
+"styles.css" = "bfa8fbd45fe49ff340fdb196b84badd631aede5d6f96740f336ea779cd441005"

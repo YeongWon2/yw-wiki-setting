@@ -70,6 +70,7 @@ review/           사람 검토 대기열. 위키에 넣지 않은 충돌 · 미
 
 ## 5. git
 
+- **최신 확인:** 모든 스킬은 시작할 때 `python3.14 tools/version.py`를 돌린다. main 브랜치인지 · origin/main보다 뒤처지지 않았는지 · 세팅 최신 릴리스인지 · Obsidian 플러그인이 맞는지 보고, 받을 수 있으면 받는다. 세션을 시작할 때도 훅이 같은 확인을 한다. 경고(⚠)가 나오면 그것부터 사람에게 알린다.
 - 갱신: 모든 스킬은 시작할 때 `git pull --rebase`로 원격 main을 받고, 끝나면 커밋하고 push한다. 브랜치와 PR 없이 main에서 작업한다 (구조 변경 같은 큰 작업만 브랜치).
 - rebase 충돌이 나면 멈추고 충돌로 넘긴다. force push는 하지 않는다.
 - 커밋 전에 `.githooks/pre-commit`이 `tools/check.py`를 돌린다. 오류가 있으면 커밋하지 않는다.

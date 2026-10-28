@@ -7,7 +7,7 @@ description: "[{{wiki_name}}] 위키를 점검하고 고친다(lint). tools/chec
 
 ## 1. 점검
 
-`git pull --rebase` 뒤 `python3.14 tools/check.py`. 무엇을 보는지는 그 파일 맨 위 설명에 있다. 커밋할 때 `.githooks/pre-commit`이 같은 점검을 한다.
+`python3.14 tools/version.py` (main · 원격 · 세팅 · 플러그인 최신 확인, ⚠면 먼저 알림) 뒤 `git pull --rebase` 뒤 `python3.14 tools/check.py`. 무엇을 보는지는 그 파일 맨 위 설명에 있다. 커밋할 때 `.githooks/pre-commit`이 같은 점검을 한다.
 
 ## 2. 바로 고치는 것 (묻지 않음)
 

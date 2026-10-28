@@ -53,8 +53,10 @@ def managed_files(profile, name, conf=None):
     out = {"README.md": readme(conf)} if conf else {}
     for src in sorted((CORE / "templates").glob("*.md")) + sorted((SETTING / "profiles" / profile / "templates").glob("*.md")):
         out[f"_templates/{src.name}"] = src.read_text()
-    for src in sorted((CORE / "tools").glob("*.py")):
-        out[f"tools/{src.name}"] = src.read_text()
+    for src in sorted((CORE / "tools").rglob("*")):
+        if src.is_file() and "__pycache__" not in src.parts:
+            out[f"tools/{src.relative_to(CORE / 'tools')}"] = src.read_text()
+    out[".claude/settings.json"] = (CORE / "claude" / "settings.json").read_text()  # 세션 시작 때 최신 확인
     out[".githooks/pre-commit"] = (CORE / "githooks" / "pre-commit").read_text()
     for skill in sorted((CORE / "skills").iterdir()):
         if (skill / "SKILL.md").exists():
@@ -62,7 +64,7 @@ def managed_files(profile, name, conf=None):
     return out
 
 
-EXECUTABLE = re.compile(r"^(tools/.*\.py|\.githooks/.*)$")
+EXECUTABLE = re.compile(r"^(tools/[^/]*\.py|\.githooks/.*)$")
 SECTION = re.compile(r"<!-- (core|profile|local):start[^>]*-->\n(.*?)\n<!-- \1:end -->", re.S)
 
 

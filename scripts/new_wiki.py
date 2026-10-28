@@ -57,6 +57,7 @@ def create(profile, dest, in_place=False, git=True):
         subprocess.run([sys.executable, str(tools / "log.py"), str(dest), "setup",
                         f"yw-wiki-setting v{setting.version()} · profile {profile}"], check=True)
     subprocess.run([sys.executable, str(tools / "index.py"), str(dest)], check=True, stdout=subprocess.DEVNULL)
+    subprocess.run([sys.executable, str(tools / "plugins.py"), str(dest)])  # Obsidian 플러그인 · 기본값 (오프라인이면 알리고 계속)
 
     if git:
         if not (dest / ".git").exists():

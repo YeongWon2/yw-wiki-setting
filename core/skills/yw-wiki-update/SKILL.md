@@ -9,7 +9,7 @@ description: "[{{wiki_name}}] 원본을 위키에 반영한다(업데이트 · i
 
 ## 0. 시작
 
-`git pull --rebase`. git 충돌이 나면 멈추고 사용자에게 넘긴다.
+`python3.14 tools/version.py` (main · 원격 · 세팅 · 플러그인 최신 확인, ⚠면 먼저 알림) 뒤 `git pull --rebase`. git 충돌이 나면 멈추고 사용자에게 넘긴다.
 
 ## 1. 범위
 

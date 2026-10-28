@@ -1,21 +1,27 @@
-# Obsidian 기기 · 세션별 상태
+# ── 열 때마다 · 조작할 때마다 바뀌는 Obsidian 상태 (기기마다 다름) ──
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
+.obsidian/workspaces.json
+.obsidian/graph.json          # 그래프 화면 상태. 기본 필터는 tools/plugins.py가 없을 때만 깐다
+.obsidian/types.json          # 속성 종류 — 자동으로 갱신됨
 .obsidian/cache
 .trash/
 
-# 로컬 전용 설정 (전역 규칙 설치본, 개인 권한)
+# ── 플러그인 코드: tools/plugins.py가 버전 · sha256 고정으로 설치한다 (설정 data.json은 올린다) ──
+.obsidian/plugins/*/main.js
+.obsidian/plugins/*/styles.css
+.obsidian/plugins/*/manifest.json
+
+# ── 로컬 전용 ──
 CLAUDE.local.md
 .claude/settings.local.json
+.yw-wiki/                     # 최신 확인 시각 등 도구 로컬 상태
 
-# 세팅 도구 로컬 상태
-.yw-wiki/
-
-# 큰 원본 파일 (필요하면 Git LFS로 전환)
+# ── 큰 원본 파일 (필요하면 Git LFS로 전환) ──
 raw/assets/**/*.mp4
 raw/assets/**/*.mov
 
-# OS
+# ── OS · 도구 ──
 .DS_Store
 Thumbs.db
 __pycache__/

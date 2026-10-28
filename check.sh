@@ -4,7 +4,7 @@ set -eu
 SETTING=$(cd "$(dirname "$0")" && pwd)
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
-export HOME="$TMP/home" YW_TODAY=2026-10-28
+export HOME="$TMP/home" YW_TODAY=2026-10-28 YW_NO_NETWORK=1
 mkdir -p "$HOME"
 git config --global user.name check >/dev/null 2>&1 || true
 git config --global user.email check@example.invalid >/dev/null 2>&1 || true
@@ -19,6 +19,10 @@ for p in personal work; do
   grep -q "profile:start $p" "$W/AGENTS.md" || fail "$p AGENTS.md profile 구간"
   grep -rq '{{wiki_name}}' "$W/.claude/skills" && fail "$p 스킬 이름 치환 안 됨"
   [ "$(git -C "$W" config core.hooksPath)" = ".githooks" ] || fail "$p 훅 연결"
+  [ -f "$W/.claude/settings.json" ] && grep -q "version.py" "$W/.claude/settings.json" || fail "$p 세션 시작 최신 확인 훅 없음"
+  grep -q "^.obsidian/graph.json" "$W/.gitignore" && grep -q '"obsidian-git"' "$W/.obsidian/community-plugins.json" || fail "$p gitignore · 플러그인 목록"
+  [ -f "$W/.obsidian/graph.json" ] && [ -f "$W/.obsidian/plugins/obsidian-git/data.json" ] || fail "$p Obsidian 기본값 안 깔림"
+  "$PY" "$W/tools/version.py" "$W" --hook | grep -q "main" || fail "$p version.py (main 확인)"
 
   # 템플릿으로 만든 페이지 하나와 그걸 가리키는 페이지 하나가 통과해야 한다
   sed -e 's/{{title}}/시험 페이지/g' -e 's/{{date}}/2026-10-28/g' -e 's/^entity_kind:.*/entity_kind: org/' \
@@ -74,5 +78,8 @@ for p in personal work; do git -C "$TMP/$p" reset -q --hard; done
 "$PY" "$WS" doctor > "$TMP/doctor" || { cat "$TMP/doctor"; fail "doctor"; }
 mv "$TMP/work" "$TMP/moved-work"
 "$PY" "$WS" doctor >/dev/null && fail "옮긴 볼트를 못 잡음"
+echo "0.0.1" > "$HOME/.claude/skills/wiki-vault/VERSION"
+"$PY" "$WS" check >/dev/null 2>&1 || true  # 오프라인 시험이라 ⚠(1)가 정상
+[ "$(cat "$HOME/.claude/skills/wiki-vault/VERSION")" = "$(cat "$SETTING/VERSION")" ] || fail "check가 낡은 전역 스킬을 다시 깔지 않음"
 echo "통과: 전역"
 echo "check.sh 통과"
