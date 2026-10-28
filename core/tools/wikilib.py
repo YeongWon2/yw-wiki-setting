@@ -115,7 +115,12 @@ def summary(body):
             seen_h1 = True
             continue
         if seen_h1 and s and not s.startswith(("#", "-", ">", "|", "```")):
-            return s if len(s) <= 120 else s[:119] + "…"
+            if len(s) <= 120:
+                return s
+            s = s[:119]
+            if s.rfind("[[") > s.rfind("]]"):  # 링크 중간에서 자르지 않는다
+                s = s[:s.rfind("[[")].rstrip()
+            return s + "…"
         if s.startswith("## "):
             break
     return ""
