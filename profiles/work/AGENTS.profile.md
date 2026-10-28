@@ -23,7 +23,7 @@
 - 회사 원본 도구(Jira · Slack · 노션 · GitHub)는 **읽기만** 한다. 댓글 · 수정 · 발송을 하지 않는다.
 - 수집 범위는 `wiki.toml` `[company.sources]`와 `[company.projects."<프로젝트>"]`다. "수집해줘"는 회사 전체, "<프로젝트> 수집해줘"는 그 경로만 읽는다.
 - 수집한 내용은 `raw/collected/`에 원본 URL · ID · 확인 날짜와 함께 필요한 부분만 텍스트로 남기고, 그다음 ingest로 source 요약을 쓴다.
-- 이미 있는 source는 `checked` 이후 원본이 바뀌었는지 대조한다. 바뀐 것은 반영하고 log에 남긴다. 기존 사실과 다르면 충돌로 넘긴다.
+- 이미 있는 source는 `checked` 이후 원본이 바뀌었는지 대조한다. 바뀐 것은 반영하고 log에 남긴다. 기존 사실과 다르면 충돌이다: 위키에 쓰지 않고 `review/`로 (core 2절).
 
 ## 3. 결정 (DEC-ID)
 
@@ -37,12 +37,12 @@
 3. 전사 위키(`[company] company_wiki.path`)에서 브랜치 → PR. **PR 전에 묻는다.**
 4. 병합되면 `review: merged`, 결정의 `published`에 PR · 커밋 링크를 적는다.
 
-- 대조: 주 1회 DEC-ID 기준으로 전사 위키와 비교해 다른 것을 `conflicts.md`에 쌓는다.
+- 대조: 주 1회 DEC-ID 기준으로 전사 위키와 비교해 다른 것을 `review/`에 `review_kind: reconcile`로 남긴다. 업무 위키와 전사 위키 중 어느 쪽을 고칠지는 사람이 review로 정한다.
 - 전사 위키 폴더에는 승격 PR 말고는 쓰지 않는다.
 
 ## 5. 경력 추출 (개인 위키로)
 
 - 월 1회, 그리고 프로젝트가 `archived`가 될 때 성과를 추상화해 개인 위키(`[career] personal_wiki`)의 `wiki/career/`에 achievement로 쓴다(`confidence: medium`). 이 작업은 묻지 않고 한다.
 - 쓰는 것: 회사 이름, 기간, 내가 한 일, 결과의 성격, 쓴 기술. 쓰지 않는 것: 고객명 · 협업사 내부 정보 · 내부 수치 · 이슈 키 · 내부 링크.
-- 걸러지지 않는 항목이 있으면 쓰지 않고 `conflicts.md`로 넘긴다.
+- 걸러지지 않는 항목은 개인 위키에 쓰지 않고 이 위키의 `review/`에 `review_kind: career-filter`로 남긴다.
 - 그 밖의 회사 내용을 개인 위키로 복사하지 않는다.

@@ -1,5 +1,5 @@
 {
-  "search": "-file:index -file:log -file:conflicts -path:_templates -path:tools",
+  "search": "-file:index -file:log -path:_templates -path:tools -path:review",
   "showTags": false,
   "showAttachments": false,
   "hideUnresolved": false,

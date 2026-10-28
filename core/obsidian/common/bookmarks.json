@@ -1,7 +1,6 @@
 {
   "items": [
     { "type": "file", "ctime": 0, "path": "wiki/index.md", "title": "index" },
-    { "type": "file", "ctime": 0, "path": "wiki/log.md", "title": "log" },
-    { "type": "file", "ctime": 0, "path": "wiki/conflicts.md", "title": "conflicts" }
+    { "type": "file", "ctime": 0, "path": "wiki/log.md", "title": "log" }
   ]
 }

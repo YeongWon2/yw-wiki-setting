@@ -31,8 +31,6 @@ updated: {{date}}
 <!-- 이 원본이 갱신한 entity · concept · decision -->
 - 
 
-## Contradictions
-
 ## Sources
 
 - 

@@ -14,12 +14,12 @@
 wiki/
   index.md        모든 페이지 목록. 질문 때 가장 먼저 읽는다 (tools/index.py가 만든다)
   log.md          작업 기록. 추가만 한다 (tools/log.py)
-  conflicts.md    사람이 판단할 충돌 대기열
   entities/       사람(people) · 조직(orgs) · 프로젝트(projects). 종류는 wiki.toml [entities]
   concepts/       개념 · 방법 · 체크리스트
   sources/        원본 하나당 요약 하나
   synthesis/      여러 페이지를 묶은 분석 · 타임라인 · 비교
   decisions/      결정 기록
+review/           사람 검토 대기열. 위키에 넣지 않은 충돌 · 미정 항목 하나 = 파일 하나 (review 템플릿)
 ```
 
 - 보관 폴더는 없다. 끝난 것은 `status: archived`로 두고 자리를 옮기지 않는다.
@@ -29,7 +29,7 @@ wiki/
 
 1. 템플릿(`_templates/`)으로만 만든다. 템플릿의 `##` 제목과 순서를 지키고, 내용이 없는 칸도 지우지 않는다.
 2. 공통 frontmatter: `title` · `type` · `status`(active / superseded / archived) · `confidence`(high / medium / low) · `sources` · `related` · `aliases` · `tags` · `created` · `updated`. type별 추가 필드는 템플릿에 있다.
-3. 본문 순서: 제목 → 1~3문장 요약 → (source: Summary / synthesis: Analysis) → Key facts → (entity: Timeline · Open tasks) → Connections → Contradictions → Sources.
+3. 본문 순서: 제목 → 1~3문장 요약 → (source: Summary / synthesis: Analysis) → Key facts → (entity: Timeline · Open tasks) → Connections → Sources.
 4. `##` 제목은 영어로 고정하고 내용은 한국어로 쓴다.
 
 **사실 · 결정 · 추정을 구분한다.**
@@ -40,32 +40,35 @@ wiki/
 - 결정이 바뀌면 지우지 않는다. 이전 결정을 `decision_status: superseded` · `status: superseded` · `superseded_by: "[[새 결정]]"`로 두고 새 결정에서 링크한다.
 - 원문을 통째로 복사하지 않는다. 요약 + 짧은 인용("따옴표") + 링크 + 확인 날짜.
 - Key facts가 12개를 넘으면 페이지를 나눈다.
-- 원본끼리 다르면 한쪽을 고르지 않는다. 페이지 `## Contradictions`와 `wiki/conflicts.md`에 두 내용과 근거를 나란히 적고 작업은 계속한다.
+- **충돌은 위키에 쓰지 않는다.** 새 원본이 기존 사실과 다르거나 원본끼리 다르면, 그 항목은 `wiki/`에 반영하지 않고 `review/`에 review 템플릿으로 남긴다(두 내용 · 각 근거 · 날짜 · 선택지). 한쪽을 임의로 고르지 않는다. 충돌이 아닌 부분은 그대로 반영한다.
+- `review/` 항목은 사람이 `yw-wiki-review`로 정해야만 위키에 들어간다. 사람과 대화 중이면 작업 끝에 바로 리뷰를 권한다. query는 `review/`를 근거로 쓰지 않는다.
 - 표와 mermaid는 내용을 담을 때만 쓴다. 장식(hero callout · 열 배치 · 이모지 제목 · 전용 CSS)은 쓰지 않는다.
 
-## 3. 작업 3가지
+## 3. 작업 5가지 (스킬)
 
 | 작업 | 스킬 | 하는 일 |
 |---|---|---|
-| 넣기 | `yw-wiki-ingest` | 원본을 읽고 source 요약 → 관련 entity · concept · decision 갱신 → 이웃 페이지의 Connections · 요약 갱신 → index · log |
+| 갱신 | `yw-wiki-sync` | 원격 최신 받기 · 세팅 새 버전 반영 · 아직 반영 안 된 raw와 검토 대기 알리기. 위키 내용은 쓰지 않는다 |
+| 업데이트 | `yw-wiki-update` | 원본을 읽고 source 요약 → 관련 entity · concept · decision 갱신 → 이웃 페이지의 Connections · 요약 갱신 → index · log |
+| 검토 | `yw-wiki-review` | `review/`의 항목을 사람에게 보여 주고 정한 것만 위키에 반영 |
 | 찾기 | `yw-wiki-query` | index → 관련 entity · synthesis → 세부 페이지 순으로 읽고 근거 링크로 답한다. 다시 쓸 만한 답은 synthesis로 저장 |
-| 점검 | `yw-wiki-lint` | `tools/check.py` 실행. 기계적인 것은 고치고, 모순 · 낡은 주장 · 고아 페이지는 `conflicts.md`로 |
+| 점검 | `yw-wiki-lint` | `tools/check.py` 실행. 기계적인 것은 고치고, 모순 · 낡은 주장 · 고아 페이지는 `review/`로 |
 
 모든 작업 뒤 `python3 tools/log.py <작업> <제목>`으로 log에 한 줄 남기고, 페이지가 늘거나 줄면 `python3 tools/index.py`로 index를 다시 만든다.
 
 ## 4. 사람이 개입하는 경우
 
-기본은 자동이다. 아래 세 경우만 사람에게 넘긴다.
+기본은 자동이다. 아래 세 경우만 사람에게 넘긴다. 셋 다 사람이 정하기 전에는 실행하거나 쓰지 않는다.
 
 | 경우 | 예 | 처리 |
 |---|---|---|
-| 충돌 | 새 원본이 기존 사실과 다름, 같은 이름 페이지 후보 둘 | `conflicts.md`에 쌓고 작업은 계속한다 |
+| 충돌 | 새 원본이 기존 사실과 다름, 원본끼리 다름, 같은 이름 페이지 후보 둘 | `review/`에 남기고 사람이 `yw-wiki-review`로 정한 것만 반영한다 |
 | 되돌릴 수 없음 | 페이지 삭제, 히스토리 재작성, force push, 메이저 세팅 업그레이드 | 실행 전에 묻는다 |
 | 밖으로 나감 | 다른 위키에 쓰기, 전사 위키 PR, 원본 도구에 쓰기 | 실행 전에 묻는다 (profile에 예외가 있으면 그것을 따른다) |
 
 ## 5. git
 
-- 작업을 시작할 때 `git pull --rebase`로 원격 main을 받고, 끝나면 커밋하고 push한다. 브랜치와 PR 없이 main에서 작업한다 (구조 변경 같은 큰 작업만 브랜치).
+- 갱신: 모든 스킬은 시작할 때 `git pull --rebase`로 원격 main을 받고, 끝나면 커밋하고 push한다. 브랜치와 PR 없이 main에서 작업한다 (구조 변경 같은 큰 작업만 브랜치).
 - rebase 충돌이 나면 멈추고 충돌로 넘긴다. force push는 하지 않는다.
 - 커밋 전에 `.githooks/pre-commit`이 `tools/check.py`를 돌린다. 오류가 있으면 커밋하지 않는다.
 

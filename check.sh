@@ -34,6 +34,16 @@ for p in personal work; do
   python3 "$W/tools/check.py" "$W" >/dev/null && fail "$p 잘못된 페이지를 못 잡음"
   rm "$W/wiki/concepts/틀림.md"; python3 "$W/tools/index.py" "$W" >/dev/null
 
+  # 충돌 칸은 위키에 두면 오류, review/ 항목은 통과(경고)
+  printf '\n## Contradictions\n' >> "$W/wiki/concepts/시험 개념.md"
+  python3 "$W/tools/check.py" "$W" >/dev/null && fail "$p 위키 안의 충돌 칸을 못 잡음"
+  sed -i.bak '/^## Contradictions$/d' "$W/wiki/concepts/시험 개념.md" && rm "$W/wiki/concepts/시험 개념.md.bak"
+  sed -e 's/{{title}}/시험 검토/g' -e 's/{{date}}/2026-10-28/g' -e 's/^review_kind:.*/review_kind: conflict/' \
+    "$W/_templates/review.md" > "$W/review/2026-10-28 시험 검토.md"
+  python3 "$W/tools/check.py" "$W" > "$TMP/out" || { cat "$TMP/out"; fail "$p review 항목이 점검을 통과하지 못함"; }
+  grep -q "검토 대기 1개" "$TMP/out" || fail "$p review 대기 경고 없음"
+  [ -f "$W/.claude/skills/yw-wiki-sync/SKILL.md" ] && [ -f "$W/.claude/skills/yw-wiki-review/SKILL.md" ] || fail "$p 스킬 5개 아님"
+
   # 업그레이드: 바뀐 게 없으면 최신, 관리 파일을 망가뜨리면 되돌리고 local 구간은 남긴다
   python3 "$SETTING/scripts/upgrade.py" "$W" | grep -q "최신" || fail "$p upgrade 멱등"
   echo "# 망가뜨림" >> "$W/tools/check.py"

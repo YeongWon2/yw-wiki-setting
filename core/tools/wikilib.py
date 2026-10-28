@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SKIP_DIRS = {".git", ".obsidian", ".trash", ".claude", ".githooks", ".yw-wiki", "tools", "_templates"}
 # wiki/ 안에서 템플릿을 따르지 않는 생성 · 기록 파일
-SPECIAL = {"index.md", "log.md", "conflicts.md"}
+SPECIAL = {"index.md", "log.md"}
 # type → 폴더 (wiki/ 기준). draft는 전사 위키 형식이라 type 대신 폴더로 정한다.
 TYPE_DIRS = {"entity": "entities", "concept": "concepts", "source": "sources", "synthesis": "synthesis",
              "decision": "decisions", "achievement": "career"}
@@ -83,7 +83,7 @@ def links(text):
 
 
 def pages(root):
-    """wiki/ 아래 페이지 (path, rel). index · log · conflicts는 뺀다."""
+    """wiki/ 아래 페이지 (path, rel). index · log는 뺀다."""
     out = []
     for path in sorted((root / "wiki").rglob("*.md")):
         rel = path.relative_to(root)

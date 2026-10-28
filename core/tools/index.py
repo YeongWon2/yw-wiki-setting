@@ -34,7 +34,7 @@ def render(root):
 
     out = ["---", "title: index", "type: index", "---", "", f"# {w.get('name', root.name)} 목차", "",
            f"{w.get('description', '')}. 페이지 {total}개. `tools/index.py`가 만든다 — 손으로 고치지 않는다.", "",
-           "작업 기록은 [[log]], 사람이 판단할 충돌은 [[conflicts]].", ""]
+           "작업 기록은 [[log]].", ""]
     kinds = conf.get("entities", {}).get("kinds", [])
     order = [(top, title) for top, title in SECTIONS] + sorted(
         {(t, t) for t, _ in groups if t not in dict(SECTIONS)})

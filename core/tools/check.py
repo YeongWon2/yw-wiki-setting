@@ -11,6 +11,8 @@
 - 없는 문서로 가는 [[링크]]
 - 코드 블록(```)이 닫히지 않았다
 - 노션식 서식이 남아 있다 ([!hero] · [!cols] · yw-wide · ## 🔗 참조)
+- 충돌 내용이 위키에 있다 (## Contradictions 칸, wiki/conflicts.md) — 충돌은 review/에 둔다
+- review/ 항목의 frontmatter(type: review · review_kind · status)가 틀렸다
 - raw/ 파일을 지우거나 옮겼다 (커밋에 올린 변경 기준)
 - index.md가 최신이 아니다 (python3 tools/index.py)
 - work: 결정에 DEC-ID가 없거나 형식이 틀리거나 겹친다. draft에 전사 위키 필수 필드가 없다
@@ -22,6 +24,7 @@
 - 진행 중인 project · course를 STALE_DAYS일 넘게 고치지 않음 · source 원본 확인(checked)이 STALE_DAYS일 넘음
 - proposed 결정이 PROPOSAL_DAYS일 넘음
 - work: 회사 출처가 아닌 URL을 sources에 씀 · 결정 파일 이름이 DEC-ID로 시작하지 않음
+- review/에 pending 항목이 있다 (yw-wiki-review로 정한다) · REVIEW_DAYS일 넘은 pending
 오늘 날짜는 YW_TODAY(YYYY-MM-DD)로 바꿔 볼 수 있다.
   python3 tools/check.py [위키 경로]
 """
@@ -48,10 +51,13 @@ DATE_KEYS = ("created", "updated", "date", "checked")
 DEC_ID = re.compile(r"^DEC-\d{4}-\d{3}$")
 PLACEHOLDER = re.compile(r"\{\{\s*(date|title|time)[^}]*\}\}")
 LEGACY = re.compile(r"\[!hero\]|\[!cols\]|yw-wide|^## 🔗 참조", re.M)
+CONFLICT = re.compile(r"^## Contradictions\s*$", re.M)
 PERIOD_PART = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")
 MAX_FACTS = 12
 STALE_DAYS = 30
 PROPOSAL_DAYS = 14
+REVIEW_DAYS = 14
+REVIEW_KINDS = {"conflict", "stale", "orphan", "duplicate", "raw-change", "reconcile", "career-filter"}
 
 
 def today():
@@ -139,10 +145,12 @@ def main():
         for name in dict.fromkeys(wikilib.links(text)):
             if name not in targets:
                 errors.append(f"{rel}: 없는 문서 링크 [[{name}]]")
-            elif name != path.stem:
+            elif name != path.stem and rel.parts[0] != "review":
                 incoming.setdefault(name, set()).add(rel)
         if text.count("```") % 2:
             errors.append(f"{rel}: 닫히지 않은 코드 블록")
+        if CONFLICT.search(text) and rel.parts[0] == "wiki":
+            errors.append(f"{rel}: 충돌 칸(## Contradictions)이 있음 — 충돌은 review/에 둔다")
         if LEGACY.search(text):
             errors.append(f"{rel}: 노션식 서식이 남아 있음 ([!hero] · [!cols] · yw-wide · 🔗 참조)")
 
@@ -270,6 +278,31 @@ def main():
             hit = pattern.search(path.read_text())
             if hit:
                 errors.append(f"{rel}: 이 위키에 두지 않는 말 '{hit.group(0)}' ([guard] allow 밖)")
+
+    pending = []
+    for path in sorted((root / "review").glob("*.md")):
+        rel = path.relative_to(root)
+        meta, _ = wikilib.frontmatter(path.read_text())
+        meta = meta or {}
+        if meta.get("type") != "review":
+            errors.append(f"{rel}: review/에는 review 템플릿 문서만 둔다")
+            continue
+        if meta.get("review_kind") not in REVIEW_KINDS:
+            errors.append(f"{rel}: review_kind는 {sorted(REVIEW_KINDS)} 중 하나")
+        if meta.get("status") not in ("pending", "resolved"):
+            errors.append(f"{rel}: status는 pending · resolved 중 하나")
+        if PLACEHOLDER.search(wikilib.strip_code(path.read_text())):
+            errors.append(f"{rel}: 템플릿 자리표시가 남아 있음")
+        if meta.get("status") == "pending":
+            pending.append(rel)
+            c = parse_date(meta.get("created", ""))
+            if c and now - c > timedelta(days=REVIEW_DAYS):
+                warnings.append(f"{rel}: 검토 대기 {REVIEW_DAYS}일 넘음 ({c})")
+    if pending:
+        warnings.append(f"review/ 검토 대기 {len(pending)}개 — yw-wiki-review로 정한다")
+
+    if (root / "wiki" / "conflicts.md").exists():
+        errors.append("wiki/conflicts.md가 있음 — 충돌은 review/에 항목 하나씩 둔다")
 
     index_text = index_tool.render(root)
     target = root / "wiki" / "index.md"

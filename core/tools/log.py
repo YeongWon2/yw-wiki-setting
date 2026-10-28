@@ -2,8 +2,8 @@
 """wiki/log.md에 작업 기록 한 줄을 더한다. 추가만 하고 지난 기록은 고치지 않는다.
 
   python3 tools/log.py <작업> <제목> [세부 …]
-  예: python3 tools/log.py ingest "2026-10-29 회의" "새 source 1" "갱신 entity 2"
-작업: ingest · query · lint · upgrade · migrate · career · reconcile
+  예: python3 tools/log.py update "2026-10-29 회의" "새 source 1" "갱신 entity 2"
+작업: sync · update · review · query · lint · upgrade · migrate · career · reconcile
 """
 import os
 import sys

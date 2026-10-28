@@ -27,8 +27,6 @@ updated: {{date}}
 
 - 
 
-## Contradictions
-
 ## Sources
 
 - 

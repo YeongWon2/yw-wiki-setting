@@ -5,7 +5,7 @@
 
 --in-place: 이미 있는 폴더(기존 저장소)에 뼈대를 깐다. 이미 있는 raw/ · wiki/ 파일과 wiki.toml은 그대로 둔다.
 만드는 것: 폴더, 템플릿 · 도구 · 스킬 · 훅, AGENTS.md(core + profile + local), CLAUDE.md, wiki.toml,
-.wiki-setting.toml, wiki/index.md · log.md · conflicts.md, .obsidian 설정, .gitignore, git init과 훅 연결, 첫 점검.
+.wiki-setting.toml, wiki/index.md · log.md, review/, .obsidian 설정, .gitignore, git init과 훅 연결, 첫 점검.
 """
 import argparse
 import shutil
@@ -15,10 +15,6 @@ import tomllib
 from pathlib import Path
 
 import setting
-
-CONFLICTS = ("---\ntitle: conflicts\ntype: conflicts\n---\n\n# 충돌 대기열\n\n"
-             "사람이 판단할 것만 쌓는다. 형식: `- [YYYY-MM-DD] [[페이지]] — 무엇이 문제인가 / 근거 / 선택지`. 정한 것은 지운다.\n")
-
 
 def create(profile, dest, in_place=False, git=True):
     if dest.exists() and any(dest.iterdir()) and not in_place:
@@ -32,7 +28,7 @@ def create(profile, dest, in_place=False, git=True):
     name = conf.get("wiki", {}).get("name", dest.name)
 
     folders = conf.get("folders", {})
-    dirs = ["wiki/concepts", "wiki/sources", "wiki/synthesis", "wiki/decisions"]
+    dirs = ["wiki/concepts", "wiki/sources", "wiki/synthesis", "wiki/decisions", "review"]
     dirs += [f"wiki/entities/{k}" for k in conf.get("entities", {}).get("kinds", [])]
     dirs += [f"wiki/{d}" for d in folders.get("wiki", [])] + [f"raw/{d}" for d in folders.get("raw", [])]
     for d in dirs:
@@ -48,7 +44,7 @@ def create(profile, dest, in_place=False, git=True):
     setting.write(dest, "CLAUDE.md", "@AGENTS.md\n")
     setting.write(dest, ".wiki-setting.toml", setting.state_toml(profile, managed))
 
-    once = {".gitignore": (setting.CORE / "gitignore").read_text(), "wiki/conflicts.md": CONFLICTS}
+    once = {".gitignore": (setting.CORE / "gitignore").read_text()}
     for src in sorted((setting.CORE / "obsidian" / "common").glob("*.json")) + \
             sorted((setting.CORE / "obsidian" / profile).glob("*.json")):
         once[f".obsidian/{src.name}"] = src.read_text()
