@@ -58,6 +58,10 @@ def main():
         setting.write(dest, rel, text)
     for rel in removed:
         (dest / rel).unlink()
+        parent = (dest / rel).parent
+        while parent != dest and parent.exists() and not any(parent.iterdir()):  # 비어 버린 스킬 폴더 등
+            parent.rmdir()
+            parent = parent.parent
     setting.write(dest, "AGENTS.md", agents_new)
     setting.write(dest, ".wiki-setting.toml", setting.state_toml(profile, managed))
     details = [f"바뀜 {r}" for r in changed] + [f"지움 {r}" for r in removed]
