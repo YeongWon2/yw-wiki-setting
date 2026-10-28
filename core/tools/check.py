@@ -226,6 +226,8 @@ def main():
                 errors.append(f"{rel}: decision_status는 {sorted(DECISION_STATUSES)} 중 하나")
             if ds == "superseded" and not meta.get("superseded_by"):
                 errors.append(f"{rel}: superseded 결정에 superseded_by가 없음")
+            if wikilib.links(f"x {meta.get('superseded_by') or ''}") == [path.stem]:
+                errors.append(f"{rel}: superseded_by가 자기 자신을 가리킴")
             d = parse_date(meta.get("date", ""))
             if ds == "proposed" and d and now - d > timedelta(days=PROPOSAL_DAYS):
                 warnings.append(f"{rel}: proposed가 {PROPOSAL_DAYS}일 넘음 ({d})")
