@@ -27,7 +27,7 @@ import wikilib  # noqa: E402
 
 COMPANY_DIR = "2 Area(영역)/회사/"
 SKIP = {"AGENTS.md", "CLAUDE.md", "README.md"}
-SKIP_TOP = {".git", ".obsidian", ".claude", ".githooks", "tools", "_templates(템플릿)"}
+SKIP_TOP = {".git", ".obsidian", ".claude", ".githooks", ".yw-wiki", "tools", "_templates", "_templates(템플릿)", "raw", "wiki", "review"}
 ACTIVE = {"진행", "예정", "보류", "계획", "유지", "누적", "기록", "필기", "정리됨", "준비"}
 ARCHIVED = {"완료", "취소", "보관"}
 DECISION = {"확정": "accepted", "제안": "proposed", "대체됨": "superseded"}
