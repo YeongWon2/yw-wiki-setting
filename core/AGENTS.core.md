@@ -29,7 +29,7 @@ wiki/
 
 1. 템플릿(`_templates/`)으로만 만든다. 템플릿의 `##` 제목과 순서를 지키고, 내용이 없는 칸도 지우지 않는다.
 2. 공통 frontmatter: `title` · `type` · `status`(active / superseded / archived) · `confidence`(high / medium / low) · `sources` · `related` · `aliases` · `tags` · `created` · `updated`. type별 추가 필드는 템플릿에 있다.
-3. 본문 순서: 제목 → 1~3문장 요약 → (source: Summary / synthesis: Analysis) → Key facts → Connections → Contradictions → Sources.
+3. 본문 순서: 제목 → 1~3문장 요약 → (source: Summary / synthesis: Analysis) → Key facts → (entity: Timeline · Open tasks) → Connections → Contradictions → Sources.
 4. `##` 제목은 영어로 고정하고 내용은 한국어로 쓴다.
 
 **사실 · 결정 · 추정을 구분한다.**

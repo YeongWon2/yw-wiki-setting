@@ -28,6 +28,10 @@ updated: {{date}}
 <!-- - YYYY-MM-DD: 일 -->
 - 
 
+## Open tasks
+
+<!-- project · course의 남은 할 일: - [ ] 할 일. 없으면 비운다 -->
+
 ## Connections
 
 <!-- - [[페이지]] — 연결한 이유 한 줄 -->
