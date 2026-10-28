@@ -26,5 +26,5 @@
 
 - 왜 이렇게 만들었나: [docs/철학.md](docs/철학.md)
 - 공통 규칙: `core/AGENTS.core.md` · 개인: `profiles/personal/AGENTS.profile.md` · 업무: `profiles/work/AGENTS.profile.md`
-- 템플릿: core 6개(entity · concept · source · synthesis · decision · review), 개인 2개(achievement · daily), 업무 2개(worklog · draft)
+- 템플릿: core 6개(entity · concept · source · synthesis · decision · review), 개인 3개(achievement · daily · concept에 My understanding 칸을 더한 판), 업무 2개(worklog · draft)
 - 버전: `VERSION`

@@ -25,12 +25,23 @@
 - 수집한 내용은 `raw/collected/`에 원본 URL · ID · 확인 날짜와 함께 필요한 부분만 텍스트로 남기고, 그다음 ingest로 source 요약을 쓴다.
 - 이미 있는 source는 `checked` 이후 원본이 바뀌었는지 대조한다. 바뀐 것은 반영하고 log에 남긴다. 기존 사실과 다르면 충돌이다: 위키에 쓰지 않고 `review/`로 (core 2절).
 
-## 3. 결정 (DEC-ID)
+## 3. 검토할 때 권위 순서
+
+`review/` 항목을 보여 줄 때 근거를 이 순서로 놓고, 위쪽을 기본 제안으로 둔다. 정하는 것은 여전히 사람이다.
+
+1. 전사 위키에 채택된 지식 (`[company.company_wiki]`)
+2. 공유 원천: 병합된 PR · 커밋, Jira, Slack, 노션
+3. 내 업무 일지 · 회의 메모 (`raw/`)
+4. Claude의 추론 (`confidence: low`)
+
+같은 단계끼리 다르면 더 최근 것을 위에 놓되 기본 제안은 두지 않는다.
+
+## 4. 결정 (DEC-ID)
 
 - 결정마다 `decision_id: DEC-YYYY-NNN`을 붙인다. 연도별로 1부터 늘리며 다시 쓰지 않는다.
 - `canonical`에 정본 위치(repo / notion / confluence)를 적는다.
 
-## 4. 전사 위키 승격
+## 5. 전사 위키 승격
 
 1. 채택할 만한 결정 · 지식을 `wiki/drafts/`에 draft 템플릿으로 쓴다. 형식은 전사 위키 `SCHEMA.md`를 따른다(근거는 공유 원천 URL만).
 2. 사람이 검토해 `review: approved`로 바꾼다.
@@ -40,7 +51,7 @@
 - 대조: 주 1회 DEC-ID 기준으로 전사 위키와 비교해 다른 것을 `review/`에 `review_kind: reconcile`로 남긴다. 업무 위키와 전사 위키 중 어느 쪽을 고칠지는 사람이 review로 정한다.
 - 전사 위키 폴더에는 승격 PR 말고는 쓰지 않는다.
 
-## 5. 경력 추출 (개인 위키로)
+## 6. 경력 추출 (개인 위키로)
 
 - 월 1회, 그리고 프로젝트가 `archived`가 될 때 성과를 추상화해 개인 위키(`[career] personal_wiki`)의 `wiki/career/`에 achievement로 쓴다(`confidence: medium`). 이 작업은 묻지 않고 한다.
 - 쓰는 것: 회사 이름, 기간, 내가 한 일, 결과의 성격, 쓴 기술. 쓰지 않는 것: 고객명 · 협업사 내부 정보 · 내부 수치 · 이슈 키 · 내부 링크.
