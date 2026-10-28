@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """LLM 위키를 새로 만든다.
 
-  python3 scripts/new_wiki.py --profile personal --dest ../yw-wiki [--in-place] [--no-git]
+  python3.14 scripts/new_wiki.py --profile personal --dest ../yw-wiki [--in-place] [--no-git]
 
 --in-place: 이미 있는 폴더(기존 저장소)에 뼈대를 깐다. 이미 있는 raw/ · wiki/ 파일과 wiki.toml은 그대로 둔다.
 만드는 것: 폴더, 템플릿 · 도구 · 스킬 · 훅, AGENTS.md(core + profile + local), CLAUDE.md, wiki.toml,

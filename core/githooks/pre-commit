@@ -1,3 +1,5 @@
 #!/bin/sh
 # LLM 위키 pre-commit: tools/check.py (frontmatter · 템플릿 · 링크 · raw 불변 · index 최신).
-exec python3 tools/check.py
+# Python은 3.14 이상(보안 지원 버전)을 쓴다. PATH의 python3가 낮아도 python3.14를 먼저 찾는다.
+PY=$(command -v python3.15 || command -v python3.14 || command -v python3)
+exec "$PY" tools/check.py

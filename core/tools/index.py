@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """wiki/index.md를 frontmatter로 다시 만든다. 손으로 고치지 않는다.
 
 폴더(type)별로 묶고, 각 묶음 안에서 active를 먼저, archived · superseded를 뒤에 싣는다.
-  python3 tools/index.py [위키 경로]          다시 만든다
-  python3 tools/index.py [위키 경로] --check  최신이 아니면 종료 코드 1
+  python3.14 tools/index.py [위키 경로]          다시 만든다
+  python3.14 tools/index.py [위키 경로] --check  최신이 아니면 종료 코드 1
 """
 import sys
 
@@ -57,7 +57,7 @@ def main():
     text = render(root)
     if "--check" in sys.argv:
         if not target.exists() or target.read_text() != text:
-            print("wiki/index.md가 최신이 아니다 — python3 tools/index.py")
+            print("wiki/index.md가 최신이 아니다 — python3.14 tools/index.py")
             return 1
         return 0
     target.write_text(text)

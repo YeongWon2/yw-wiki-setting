@@ -2,8 +2,8 @@
 import re
 import sys
 
-if sys.version_info < (3, 11):  # tomllib
-    sys.exit(f"Python 3.11 이상이 필요하다 (지금 {sys.version.split()[0]}). 예: brew install python")
+if sys.version_info < (3, 14):  # 보안 지원 버전 (3.14: 2030-10까지). tomllib은 3.11+
+    sys.exit(f"Python 3.14 이상이 필요하다 (지금 {sys.version.split()[0]}). brew install python@3.14 뒤 python3.14로 실행")
 
 import tomllib
 from pathlib import Path

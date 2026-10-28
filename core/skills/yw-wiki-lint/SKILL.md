@@ -7,11 +7,11 @@ description: "[{{wiki_name}}] 위키를 점검하고 고친다(lint). tools/chec
 
 ## 1. 점검
 
-`git pull --rebase` 뒤 `python3 tools/check.py`. 무엇을 보는지는 그 파일 맨 위 설명에 있다. 커밋할 때 `.githooks/pre-commit`이 같은 점검을 한다.
+`git pull --rebase` 뒤 `python3.14 tools/check.py`. 무엇을 보는지는 그 파일 맨 위 설명에 있다. 커밋할 때 `.githooks/pre-commit`이 같은 점검을 한다.
 
 ## 2. 바로 고치는 것 (묻지 않음)
 
-- index가 최신이 아님 → `python3 tools/index.py`.
+- index가 최신이 아님 → `python3.14 tools/index.py`.
 - frontmatter 형식: 빠진 공통 필드 추가, 날짜 형식, `updated`.
 - 템플릿 제목이 빠짐 → 템플릿 제목 그대로 빈 칸을 넣는다.
 - 깨진 링크 중 대상 후보가 하나뿐인 것(이름 오타, 이름이 바뀐 페이지).
@@ -34,4 +34,4 @@ description: "[{{wiki_name}}] 위키를 점검하고 고친다(lint). tools/chec
 
 ## 5. 마무리
 
-`python3 tools/check.py` 오류 0 확인 → `python3 tools/log.py lint "<요약>" "고침 N" "review K"` → 커밋 · push. 보고 첫 줄은 "오류 N → 0, 고침 M, review K".
+`python3.14 tools/check.py` 오류 0 확인 → `python3.14 tools/log.py lint "<요약>" "고침 N" "review K"` → 커밋 · push. 보고 첫 줄은 "오류 N → 0, 고침 M, review K".

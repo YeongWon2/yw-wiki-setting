@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """1회용: PARA 볼트(yw-wiki 2026-10 구조)를 개인 위키 · 업무 위키로 나눌 계획을 만든다.
 
-  python3 scripts/migrate_para.py <PARA 볼트> --personal <경로> --work <경로> --dry-run [--report <파일>] [--map <toml>]
+  python3.14 scripts/migrate_para.py <PARA 볼트> --personal <경로> --work <경로> --dry-run [--report <파일>] [--map <toml>]
 
 --dry-run: 파일을 건드리지 않고 보고서(markdown)만 쓴다.
   문서마다 갈 위키 · 새 경로 · 새 type, 매핑되지 않은 파일, 깨질 링크, 개인 위키에 남는 회사 말, 사람이 정할 것.

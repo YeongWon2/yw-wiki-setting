@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """만든 위키에 이 세팅의 변경을 내려보낸다.
 
-  python3 scripts/upgrade.py <위키 경로> [--dry-run] [--yes]
+  python3.14 scripts/upgrade.py <위키 경로> [--dry-run] [--yes]
 
 세팅 관리 파일(.wiki-setting.toml의 managed, AGENTS.md의 core · profile 구간)만 덮어쓴다.
 raw/ · wiki/ · wiki.toml · AGENTS.md의 local 구간 · .obsidian · .gitignore는 건드리지 않는다.

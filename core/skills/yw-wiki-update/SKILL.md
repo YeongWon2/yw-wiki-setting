@@ -28,9 +28,9 @@ description: "[{{wiki_name}}] 원본을 위키에 반영한다(업데이트 · i
 ## 3. 마무리
 
 ```sh
-python3 tools/index.py
-python3 tools/log.py update "<제목>" "source N" "갱신 M" "review K"
-python3 tools/check.py
+python3.14 tools/index.py
+python3.14 tools/log.py update "<제목>" "source N" "갱신 M" "review K"
+python3.14 tools/check.py
 ```
 
 오류를 고친 뒤 커밋하고 push한다. 보고는 첫 줄에 결론("source N · 갱신 M · 검토 K"), 그 뒤에 새 페이지 · 고친 페이지 · review/에 남긴 것 · 못 읽은 곳. 검토가 생겼으면 이어서 [yw-wiki-review](../yw-wiki-review/SKILL.md)를 권한다.

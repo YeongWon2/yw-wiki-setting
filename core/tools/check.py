@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """LLM 위키 점검: AGENTS.md 중 기계로 볼 수 있는 것만 본다.
 
 오류(종료 코드 1)
@@ -14,7 +14,7 @@
 - 충돌 내용이 위키에 있다 (## Contradictions 칸, wiki/conflicts.md) — 충돌은 review/에 둔다
 - review/ 항목의 frontmatter(type: review · review_kind · status)가 틀렸다
 - raw/ 파일을 지우거나 옮겼다 (커밋에 올린 변경 기준)
-- index.md가 최신이 아니다 (python3 tools/index.py)
+- index.md가 최신이 아니다 (python3.14 tools/index.py)
 - work: 결정에 DEC-ID가 없거나 형식이 틀리거나 겹친다. draft에 전사 위키 필수 필드가 없다
 - [guard] terms(이 위키에 있으면 안 되는 말)가 [guard] allow 밖의 파일에 있다
 경고
@@ -26,7 +26,7 @@
 - work: 회사 출처가 아닌 URL을 sources에 씀 · 결정 파일 이름이 DEC-ID로 시작하지 않음
 - review/에 pending 항목이 있다 (yw-wiki-review로 정한다) · REVIEW_DAYS일 넘은 pending
 오늘 날짜는 YW_TODAY(YYYY-MM-DD)로 바꿔 볼 수 있다.
-  python3 tools/check.py [위키 경로]
+  python3.14 tools/check.py [위키 경로]
 """
 import os
 import re
@@ -307,7 +307,7 @@ def main():
     index_text = index_tool.render(root)
     target = root / "wiki" / "index.md"
     if not target.exists() or target.read_text() != index_text:
-        errors.append("wiki/index.md가 최신이 아님 — python3 tools/index.py")
+        errors.append("wiki/index.md가 최신이 아님 — python3.14 tools/index.py")
 
     for line in errors:
         print(f"오류  {line}")

@@ -8,8 +8,8 @@
 
 | 하려는 것 | 명령 |
 |---|---|
-| 새 위키 만들기 | `python3 scripts/new_wiki.py --profile personal --dest <경로>` (업무는 `--profile work`) |
-| 위키에 새 버전 반영 | `python3 scripts/upgrade.py <위키 경로>` (메이저는 `--yes`) |
+| 새 위키 만들기 | `python3.14 scripts/new_wiki.py --profile personal --dest <경로>` (업무는 `--profile work`) |
+| 위키에 새 버전 반영 | `python3.14 scripts/upgrade.py <위키 경로>` (메이저는 `--yes`) |
 | 세팅 바꾼 뒤 점검 | `sh check.sh` (통과한 커밋에만 `vX.Y.Z` 태그) |
 
 ## 위키 안에서 말하기 (스킬 5개)

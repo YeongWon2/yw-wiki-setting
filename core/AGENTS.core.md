@@ -56,7 +56,7 @@ review/           사람 검토 대기열. 위키에 넣지 않은 충돌 · 미
 | 찾기 | `yw-wiki-query` | index → 관련 entity · synthesis → 세부 페이지 순으로 읽고 근거 링크로 답한다. 다시 쓸 만한 답은 synthesis로 저장 |
 | 점검 | `yw-wiki-lint` | `tools/check.py` 실행. 기계적인 것은 고치고, 모순 · 낡은 주장 · 고아 페이지는 `review/`로 |
 
-모든 작업 뒤 `python3 tools/log.py <작업> <제목>`으로 log에 한 줄 남기고, 페이지가 늘거나 줄면 `python3 tools/index.py`로 index를 다시 만든다.
+모든 작업 뒤 `python3.14 tools/log.py <작업> <제목>`으로 log에 한 줄 남기고, 페이지가 늘거나 줄면 `python3.14 tools/index.py`로 index를 다시 만든다.
 
 ## 4. 사람이 개입하는 경우
 
