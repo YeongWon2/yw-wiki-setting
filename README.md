@@ -1,14 +1,30 @@
 # yw-wiki-setting
 
-> **이 저장소의 원격(`YeongWon2/yw-wiki-setting`)을 지우지 않는다.** 위키들이 여기 릴리스 태그를 받아 규칙 · 템플릿 · 도구를 맞춘다.
+**LLM 위키 두 개(개인 · 개인 업무)를 만들고 같은 규칙으로 맞추는 세팅이다. 위키 내용은 없다.**
 
-LLM 위키를 만들고, 만든 위키들의 규칙 · 템플릿 · 도구 · 스킬을 같은 버전으로 유지하는 세팅 프로젝트다. 위키 내용(raw · wiki)과 회사 값은 갖지 않는다.
+> 원격 저장소(`YeongWon2/yw-wiki-setting`)를 지우지 않는다. 위키들이 여기 릴리스 태그를 받아 맞춘다.
 
-| 폴더 | 내용 |
+## 쓰기
+
+| 하려는 것 | 명령 |
 |---|---|
-| `core/` | 모든 위키 공통: `AGENTS.core.md`, 템플릿 6개(entity · concept · source · synthesis · decision · review), `tools/`, `skills/`, `obsidian/` |
-| `profiles/personal/` | 개인 위키: 규칙, 템플릿 2개(achievement · daily), `wiki.toml` 기본값 |
-| `profiles/work/` | 업무 위키: 규칙, 템플릿 2개(worklog · draft), `wiki.toml` 기본값 |
-| `scripts/` | `new_wiki.py`(생성) · `upgrade.py`(갱신) · `migrate_para.py`(1회용) |
+| 새 위키 만들기 | `python3 scripts/new_wiki.py --profile personal --dest <경로>` (업무는 `--profile work`) |
+| 위키에 새 버전 반영 | `python3 scripts/upgrade.py <위키 경로>` (메이저는 `--yes`) |
+| 세팅 바꾼 뒤 점검 | `sh check.sh` (통과한 커밋에만 `vX.Y.Z` 태그) |
 
-버전은 `VERSION`. 릴리스 태그 `vX.Y.Z`는 `check.sh`를 통과한 커밋에만 단다.
+## 위키 안에서 말하기 (스킬 5개)
+
+| 말 | 스킬 | 하는 일 |
+|---|---|---|
+| 갱신해줘 | `yw-wiki-sync` | 최신 받기 · 세팅 반영 · 할 일 알리기 |
+| 업데이트해줘 · 수집해줘 | `yw-wiki-update` | 원본을 위키에 반영. 충돌은 `review/`로 |
+| 리뷰해줘 | `yw-wiki-review` | 검토 대기를 보여 주고 정한 것만 반영 |
+| 찾아줘 | `yw-wiki-query` | 목차부터 읽고 근거 링크로 답함 |
+| 점검해줘 | `yw-wiki-lint` | 자동 검사, 판단할 것은 `review/`로 |
+
+## 더 보기
+
+- 왜 이렇게 만들었나: [docs/철학.md](docs/철학.md)
+- 공통 규칙: `core/AGENTS.core.md` · 개인: `profiles/personal/AGENTS.profile.md` · 업무: `profiles/work/AGENTS.profile.md`
+- 템플릿: core 6개(entity · concept · source · synthesis · decision · review), 개인 2개(achievement · daily), 업무 2개(worklog · draft)
+- 버전: `VERSION`

@@ -34,7 +34,7 @@ def main():
         print(f"메이저 버전 변경 v{old_v} → v{new_v}. 세팅 README의 마이그레이션 안내를 읽고 --yes로 다시 실행한다.")
         return 2
 
-    managed = setting.managed_files(profile, setting.wiki_name(dest, profile))
+    managed = setting.managed_files(profile, setting.wiki_name(dest, profile), setting.wiki_conf(dest, profile))
     changed = [rel for rel, text in managed.items()
                if not (dest / rel).exists() or (dest / rel).read_text() != text]
     removed = [rel for rel in state.get("managed", []) if rel not in managed and (dest / rel).exists()]

@@ -36,7 +36,7 @@ def create(profile, dest, in_place=False, git=True):
         if not any((dest / d).iterdir()):
             (dest / d / ".gitkeep").write_text("")
 
-    managed = setting.managed_files(profile, name)
+    managed = setting.managed_files(profile, name, conf)
     for rel, text in managed.items():
         setting.write(dest, rel, text)
     old = (dest / "AGENTS.md").read_text() if (dest / "AGENTS.md").exists() else ""
