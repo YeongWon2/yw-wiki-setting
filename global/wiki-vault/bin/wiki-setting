@@ -372,7 +372,13 @@ def cmd_check(a):
                 if r.returncode == 0 and clean:
                     git("add", "-A", cwd=path)
                     c = git("commit", "-q", "-m", f"세팅 v{wv} → v{sver} 반영 (wiki-setting check)", cwd=path)
-                    notes.append(f"{vid}: 세팅 v{wv} → v{sver} 반영" + ("" if c.returncode == 0 else " (커밋 못 함 — 점검 오류)"))
+                    pushed = ""
+                    if c.returncode == 0 and git("remote", cwd=path).stdout.strip() and \
+                            git("branch", "--show-current", cwd=path).stdout.strip() == "main":
+                        pr = git("push", "-q", "origin", "main", cwd=path)  # 규칙: 끝나면 push (main에서만, force 없음)
+                        pushed = " · push" if pr.returncode == 0 else " · push 못 함(원격이 앞섬 — 갱신해줘)"
+                        bad |= pr.returncode != 0
+                    notes.append(f"{vid}: 세팅 v{wv} → v{sver} 반영" + ("" if c.returncode == 0 else " (커밋 못 함 — 점검 오류)") + pushed)
                     bad |= c.returncode != 0
                 else:
                     notes.append(f"{vid}: 세팅 v{wv} → v{sver} 반영" + (" (고친 파일이 있어 커밋은 안 함)" if r.returncode == 0 else " 실패"))
