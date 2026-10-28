@@ -37,6 +37,13 @@ for p in personal work; do
   "$PY" "$W/tools/index.py" "$W" >/dev/null
   "$PY" "$W/tools/check.py" "$W" >/dev/null || { "$PY" "$W/tools/check.py" "$W"; fail "$p 템플릿 페이지가 점검을 통과하지 못함"; }
 
+  # 없는 파일 · 로컬 절대 경로 마크다운 링크는 오류
+  printf '\n- [없음](../../raw/없는%%20파일.md)\n' >> "$W/wiki/concepts/시험 개념.md"
+  "$PY" "$W/tools/check.py" "$W" | grep -q "없는 파일 링크" || fail "$p 없는 파일 링크를 못 잡음"
+  sed -i.bak '/없는%20파일.md/d' "$W/wiki/concepts/시험 개념.md"; printf '\n- [로컬](/Users/someone/a.md)\n' >> "$W/wiki/concepts/시험 개념.md"
+  "$PY" "$W/tools/check.py" "$W" | grep -q "로컬 절대 경로" || fail "$p 로컬 절대 경로 링크를 못 잡음"
+  sed -i.bak '/someone/d' "$W/wiki/concepts/시험 개념.md"; rm -f "$W/wiki/concepts/시험 개념.md.bak"
+
   # 잘못된 페이지는 오류여야 한다
   printf -- '---\ntitle: 틀림\ntype: entity\n---\n\n# 틀림\n\n[[없는 문서]]\n' > "$W/wiki/concepts/틀림.md"
   "$PY" "$W/tools/index.py" "$W" >/dev/null

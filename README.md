@@ -4,13 +4,24 @@
 
 > 원격 저장소(`YeongWon2/yw-wiki-setting`)를 지우지 않는다. 위키들이 여기 릴리스 태그를 받아 맞춘다.
 
+## 새 PC에서 시작하기
+
+```sh
+brew install python@3.14
+git clone https://github.com/YeongWon2/yw-wiki-setting ~/.local/share/wiki/yw-wiki-setting
+python3.14 ~/.local/share/wiki/yw-wiki-setting/global/wiki-vault/bin/wiki-setting install
+wiki-setting register ~/Desktop/wiki/yw-wiki        # 받아 둔 위키마다
+```
+
+새 위키는 `wiki-setting new-vault --profile personal|work --path <폴더>`. 그다음부터 `wiki-setting check`(길잡이 · 세션 시작 · 모든 스킬이 먼저 돌림)가 세팅 · 전역 스킬 · 위키를 main의 최신 릴리스로 맞춘다.
+
 ## 쓰기
 
 | 하려는 것 | 명령 |
 |---|---|
 | 새 위키 만들기 | `python3.14 scripts/new_wiki.py --profile personal --dest <경로>` (업무는 `--profile work`) |
 | 위키에 새 버전 반영 | `python3.14 scripts/upgrade.py <위키 경로>` (메이저는 `--yes`) |
-| 세팅 바꾼 뒤 점검 | `sh check.sh` (임시 위키로 단위 시험) → `sh e2e.sh <개인 위키> <업무 위키>` (실제 위키 복사본으로 사용 시나리오). 둘 다 통과한 커밋에만 `vX.Y.Z` 태그 |
+| 세팅 바꾼 뒤 점검 | `sh check.sh` (단위 시험) → `sh e2e.sh <개인 위키> <업무 위키>` (실제 위키 복사본으로 사용 시나리오) → `python3.14 scripts/audit_links.py <위키들> . --online` (링크 · 낡은 표현). 모두 통과한 커밋에만 `vX.Y.Z` 태그 |
 | 이 PC에 길잡이 스킬 깔기 | `python3.14 global/wiki-vault/bin/wiki-setting install` → `register <위키 폴더>` (볼트 목록 `~/.config/wiki/vaults.toml`) |
 
 ## 위키 안에서 말하기 (스킬 5개)

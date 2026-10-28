@@ -35,17 +35,40 @@ def wiki_name(dest, profile):
 
 
 def readme(conf):
-    """위키 README (3초 읽기: 첫 줄에 무엇인지, 그다음 말하는 법)."""
+    """위키 README (3초 읽기: 첫 줄 = 무엇인지 → 30초: 말하는 법 · 폴더 → 상세: 새 PC에서 시작)."""
     w = conf.get("wiki", {})
-    return (f"# {w.get('name', '')}\n\n**{w.get('description', '')}를 Claude가 쓰고 유지하는 LLM 위키다. 질문은 `wiki/index.md`부터 읽는다.**\n\n"
-            "| 말 | 하는 일 |\n|---|---|\n"
-            "| 갱신해줘 | 최신 받기 · 세팅 반영 · 할 일 알리기 |\n"
-            "| 업데이트해줘 · 수집해줘 | 원본을 위키에 반영, 충돌은 `review/`로 |\n"
-            "| 리뷰해줘 | 검토 대기를 보여 주고 정한 것만 반영 |\n"
-            "| 찾아줘 | 목차부터 읽고 근거 링크로 답함 |\n"
-            "| 점검해줘 | 자동 검사, 판단할 것은 `review/`로 |\n\n"
-            "- 원본은 `raw/`(내가 씀, AI는 읽기만), 위키는 `wiki/`(AI가 씀), 검토 대기는 `review/`.\n"
-            "- 규칙은 `AGENTS.md`. 세팅(`yw-wiki-setting`)이 관리하는 파일은 여기서 고치지 않는다.\n")
+    work = w.get("profile") == "work"
+    raw = "`raw/worklog/` 업무 일지 · `raw/meetings/` 회의 메모 · `raw/collected/` 수집 요약" if work else \
+        "`raw/daily/` 일지 · `raw/notes/` 메모 · `raw/assets/` 이미지 · PDF"
+    extra = "| `wiki/drafts/` | 팀 · 전사 위키 승격 초안 | Claude (사람 검토 뒤 대상 위키 규칙대로 반영) |\n" if work else \
+        "| `wiki/career/` | 성과 기록 (업무 위키가 회사 내용을 걸러 보냄) | Claude |\n"
+    return f"""# {w.get('name', '')}
+
+**{w.get('description', '')}를 Claude가 쓰고 유지하는 LLM 위키다. 질문은 `wiki/index.md`부터 읽는다.**
+
+| 말 | 하는 일 |
+|---|---|
+| 갱신해줘 | 최신 받기 · 세팅 반영 · 할 일 알리기 |
+| 업데이트해줘 · 수집해줘 | 원본을 위키에 반영, 충돌은 `review/`로 |
+| 리뷰해줘 | 검토 대기를 보여 주고 정한 것만 반영 |
+| 찾아줘 | 목차부터 읽고 근거 링크로 답함 |
+| 점검해줘 | 자동 검사, 판단할 것은 `review/`로 |
+
+| 폴더 | 무엇 | 누가 쓰나 |
+|---|---|---|
+| `raw/` | 원본: {raw} | 나 (Claude는 읽기만) |
+| `wiki/` | 위키: entities · concepts · sources · synthesis · decisions, 목차 `index.md` · 기록 `log.md` | Claude |
+{extra}| `review/` | 사람이 정할 검토 대기 (충돌은 위키에 쓰지 않는다) | Claude가 쌓고 내가 정함 |
+
+## 새 PC에서 시작하기
+
+1. Python 3.14: `brew install python@3.14`
+2. 세팅 받고 길잡이 깔기: `git clone https://github.com/YeongWon2/yw-wiki-setting ~/.local/share/wiki/yw-wiki-setting` → `python3.14 ~/.local/share/wiki/yw-wiki-setting/global/wiki-vault/bin/wiki-setting install`
+3. 이 위키 받고 등록: `git clone <이 저장소> ~/Desktop/wiki/{w.get('id', 'wiki') == 'work' and 'yw-work-wiki' or 'yw-wiki'}` → `wiki-setting register <그 폴더>`
+4. 폴더에서 Claude Code를 열면 세션 시작 때 최신 확인(main · 세팅 · Obsidian 플러그인)이 돈다. Obsidian으로 폴더를 열면 Git 플러그인이 메모를 원격과 맞춘다.
+
+규칙은 `AGENTS.md`, 만든 이유는 세팅의 `docs/철학.md`. 세팅이 관리하는 파일(`_templates/` · `tools/` · `.claude/skills/` · 이 README)은 여기서 고치지 않는다.
+"""
 
 
 def managed_files(profile, name, conf=None):

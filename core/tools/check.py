@@ -8,7 +8,7 @@
 - 템플릿(_templates/<type>.md)의 ## 제목이 빠졌거나 순서가 다르다
 - 날짜(created · updated · date · checked)가 YYYY-MM-DD가 아니거나, updated가 created보다 이르거나, 오늘보다 뒤다
 - 템플릿 자리표시({{date}} · {{title}})가 남아 있다
-- 없는 문서로 가는 [[링크]]
+- 없는 문서로 가는 [[링크]], 없는 파일로 가는 마크다운 링크 [..](경로), 로컬 절대 경로 링크(/Users/… · ~/… — 다른 PC에서 깨짐)
 - 코드 블록(```)이 닫히지 않았다
 - 노션식 서식이 남아 있다 ([!hero] · [!cols] · yw-wide · ## 🔗 참조)
 - 충돌 내용이 위키에 있다 (## Contradictions 칸, wiki/conflicts.md) — 충돌은 review/에 둔다
@@ -33,6 +33,7 @@ import re
 import subprocess
 import sys
 from datetime import date, timedelta
+import urllib.parse
 from urllib.parse import urlparse
 
 import index as index_tool
@@ -51,6 +52,7 @@ DEC_ID = re.compile(r"^DEC-\d{4}-\d{3}$")
 PLACEHOLDER = re.compile(r"\{\{\s*(date|title|time)[^}]*\}\}")
 LEGACY = re.compile(r"\[!hero\]|\[!cols\]|yw-wide|^## 🔗 참조", re.M)
 CONFLICT = re.compile(r"^## Contradictions\s*$", re.M)
+MD_LINK = re.compile(r"(?<!!)\[[^\]]*\]\(<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\)")
 PERIOD_PART = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")
 MAX_FACTS = 12
 STALE_DAYS = 30
@@ -146,6 +148,14 @@ def main():
                 errors.append(f"{rel}: 없는 문서 링크 [[{name}]]")
             elif name != path.stem and rel.parts[0] != "review":
                 incoming.setdefault(name, set()).add(rel)
+        for target in MD_LINK.findall(wikilib.strip_code(text)):
+            if target.startswith(("http://", "https://", "mailto:", "#", "obsidian:")):
+                continue
+            local = urllib.parse.unquote(target.split("#")[0])
+            if local.startswith(("/", "~")):
+                errors.append(f"{rel}: 로컬 절대 경로 링크 {target} — 다른 PC에서 깨진다")
+            elif local and not (path.parent / local).exists():
+                errors.append(f"{rel}: 없는 파일 링크 {target}")
         if text.count("```") % 2:
             errors.append(f"{rel}: 닫히지 않은 코드 블록")
         if CONFLICT.search(text) and rel.parts[0] == "wiki":
