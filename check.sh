@@ -113,5 +113,9 @@ sed -i.bak 's/^target_wiki: nope/target_wiki: company/' "$TMP/work/wiki/drafts/�
 echo "0.0.1" > "$HOME/.claude/skills/wiki-vault/VERSION"
 "$PY" "$WS" check >/dev/null 2>&1 || true  # 오프라인 시험이라 ⚠(1)가 정상
 [ "$(cat "$HOME/.claude/skills/wiki-vault/VERSION")" = "$(cat "$SETTING/VERSION")" ] || fail "check가 낡은 전역 스킬을 다시 깔지 않음"
+# 버전은 내리지 않는다: 위키가 세팅보다 새것이면 그대로
+sed -i.bak 's/^version = .*/version = "99.0.0"/' "$TMP/work/.wiki-setting.toml" && rm "$TMP/work/.wiki-setting.toml.bak"
+"$PY" "$WS" check --vault "$TMP/work" >/dev/null 2>&1 || true
+grep -q '^version = "99.0.0"' "$TMP/work/.wiki-setting.toml" || fail "check가 위키 세팅 버전을 내림"
 echo "통과: 전역"
 echo "check.sh 통과"

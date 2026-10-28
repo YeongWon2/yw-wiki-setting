@@ -3,7 +3,7 @@
 
   python3.14 tools/version.py [위키 경로] [--hook] [--force]
 
-1. git: 지금 브랜치가 main인지, origin/main보다 뒤처졌는지. 뒤처졌고 고친 파일이 없으면 pull --rebase로 받는다.
+1. git: 지금 브랜치가 main인지, origin/main과 같은지. 고친 파일이 없으면 뒤처진 것은 pull --rebase로 받고, 앞선 커밋은 push한다(force 없음).
 2. 세팅: 전역 실행기(wiki-setting)가 있으면 `wiki-setting check --vault <이 위키>`로 넘긴다
    (세팅 사본을 최신 릴리스 태그로 · 전역 스킬 · 이 위키 upgrade). 없으면 원격 태그만 보고 알린다.
 3. 플러그인: tools/plugins.py로 맞춘다.
@@ -58,6 +58,10 @@ def check_git(root, online):
         elif behind:
             notes.append(f"origin/main보다 {behind}개 뒤" + (" (고친 파일이 있어 받지 않음)" if dirty else ""))
             bad = True
+        if ahead and branch == "main" and not dirty and not behind and online:
+            if git(root, "push", "-q", "origin", "main").returncode == 0:  # 규칙: main은 원격과 같게 (force 없음)
+                notes.append(f"커밋 {ahead}개 push")
+                ahead = 0
         if ahead:
             notes.append(f"push 안 한 커밋 {ahead}개")
     if notes == ["main"]:

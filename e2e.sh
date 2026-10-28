@@ -13,6 +13,20 @@ PY=$(command -v python3.15 || command -v python3.14 || echo /opt/homebrew/bin/py
 fail() { echo "실패: $1"; exit 1; }
 ok() { echo "통과: $1"; }
 
+# 임시 HOME: 시험할 세팅(이 폴더의 지금 커밋)을 원격 없는 사본으로 두고, 그 사본에서 전역 스킬을 깐다.
+# 실제 ~/.claude · ~/.config/wiki · 세팅 사본은 건드리지 않는다. 플러그인 캐시만 복사해 다시 받지 않는다.
+REAL_HOME=$HOME
+export HOME="$TMP/home"; mkdir -p "$HOME/.cache"
+cp -R "$REAL_HOME/.cache/yw-wiki" "$HOME/.cache/" 2>/dev/null || true
+git clone -q "$SETTING" "$TMP/setting" && git -C "$TMP/setting" remote remove origin
+cp "$SETTING"/VERSION "$TMP/setting/VERSION"
+for f in $(git -C "$SETTING" diff --name-only HEAD; git -C "$SETTING" ls-files --others --exclude-standard); do
+  mkdir -p "$TMP/setting/$(dirname "$f")"; cp "$SETTING/$f" "$TMP/setting/$f"   # 커밋 전 변경도 시험한다
+done
+"$PY" "$TMP/setting/global/wiki-vault/bin/wiki-setting" install >/dev/null
+printf 'version = 1\ndefault = "personal"\n\n[setting]\npath = "%s"\n' "$TMP/setting" > "$HOME/.config/wiki/vaults.toml"
+WS="$HOME/.claude/skills/wiki-vault/bin/wiki-setting"
+
 for src in "$PERSONAL" "$WORK"; do
   name=$(basename "$src")
   # 원격 흉내: bare 저장소 하나와 복사본 둘(A: 내 PC, B: 다른 기기)
@@ -22,11 +36,17 @@ for src in "$PERSONAL" "$WORK"; do
   git -C "$TMP/$name.git" symbolic-ref HEAD refs/heads/main
   git clone -q "$TMP/$name.git" "$TMP/$name-A"; git clone -q "$TMP/$name.git" "$TMP/$name-B"
   A="$TMP/$name-A"; B="$TMP/$name-B"
+  "$PY" "$WS" register "$A" >/dev/null
   for W in "$A" "$B"; do
     git -C "$W" checkout -q main 2>/dev/null || git -C "$W" checkout -q -b main
     git -C "$W" config core.hooksPath .githooks; git -C "$W" config user.name e2e; git -C "$W" config user.email e2e@example.invalid
     cp -R "$src/.obsidian/plugins" "$W/.obsidian/" 2>/dev/null || true
   done
+
+  # 0. 시험할 세팅(이 폴더)으로 올린다: A에서 upgrade · 커밋 · push, B는 받는다
+  "$PY" "$TMP/setting/scripts/upgrade.py" "$A" --yes >/dev/null
+  git -C "$A" add -A && { git -C "$A" diff --cached --quiet || git -C "$A" commit -qm "e2e: 시험할 세팅으로 upgrade"; }
+  git -C "$A" push -q origin main && git -C "$B" pull -q --rebase origin main
 
   # 1. 세션 시작 훅 (.claude/settings.json의 명령 그대로)
   CMD=$("$PY" -c "import json,sys;print(json.load(open(sys.argv[1]))['hooks']['SessionStart'][0]['hooks'][0]['command'])" "$A/.claude/settings.json")
@@ -77,7 +97,10 @@ for src in "$PERSONAL" "$WORK"; do
   env -i HOME="$HOME" PATH=/usr/bin:/bin git -C "$A" -c user.name=obs -c user.email=o@example.invalid commit -qm "obsidian: 메모" \
     || fail "$name 짧은 PATH에서 커밋 실패 (훅이 python3.14를 못 찾음)"
   ok "$name 짧은 PATH(Obsidian) 커밋"
-  git -C "$A" push -q origin main
+  # 앞선 커밋은 version.py가 push한다 (원격 main과 같게)
+  "$PY" "$A/tools/version.py" "$A" --force | grep -q "push" || fail "$name 앞선 커밋을 push하지 않음"
+  [ -z "$(git -C "$A" rev-list origin/main..HEAD)" ] || fail "$name push 뒤에도 원격보다 앞섬"
+  ok "$name 앞선 커밋 자동 push"
 
   # 6. 다른 기기(B): 원격이 앞서 있으면 version.py가 받는다
   "$PY" "$B/tools/version.py" "$B" --force > "$TMP/v" || true
@@ -91,10 +114,10 @@ for src in "$PERSONAL" "$WORK"; do
   ok "$name main 아닌 브랜치 경고"
 done
 
-# 8. 길잡이: 목록 · 경로 · 확인 · doctor (실제 PC 설정을 읽기만)
-WS="$HOME/.claude/skills/wiki-vault/bin/wiki-setting"
-[ -x "$WS" ] || fail "전역 스킬 없음 — wiki-setting install"
+# 8. 길잡이: 목록 · 경로 · 확인 · doctor (임시 HOME의 등록)
 "$PY" "$WS" list | grep -q "work:" || fail "길잡이 목록"
 [ -d "$("$PY" "$WS" path work)" ] || fail "길잡이 경로"
-ok "길잡이 목록 · 경로 — $("$PY" "$WS" list | head -1)"
+"$PY" "$WS" check > "$TMP/c" 2>&1 || true
+grep -q "세팅 v$(cat "$SETTING/VERSION")" "$TMP/c" || { cat "$TMP/c"; fail "길잡이 check"; }
+ok "길잡이 목록 · 경로 · check — $(cut -c1-140 "$TMP/c")"
 echo "e2e 통과"

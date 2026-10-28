@@ -342,7 +342,8 @@ def cmd_check(a):
     src = sdir / "global" / "wiki-vault"
     for d in SKILL_DIRS:
         have = (d / "VERSION").read_text().strip() if (d / "VERSION").exists() else None
-        if src.exists() and have != sver:
+        newer = have and tuple(int(x) for x in re.findall(r"\d+", have)[:3]) > tuple(int(x) for x in re.findall(r"\d+", sver)[:3])
+        if src.exists() and have != sver and not newer:
             if d.exists():
                 shutil.rmtree(d)
             shutil.copytree(src, d)
@@ -362,7 +363,10 @@ def cmd_check(a):
             bad = True
             continue
         wv = tomllib.loads(st.read_text()).get("version", "0.0.0")
-        if wv != sver:
+        vt = lambda v: tuple(int(x) for x in re.findall(r"\d+", v)[:3])
+        if vt(wv) > vt(sver):  # 위키가 더 새 버전(세팅 개발 중 시험 등) — 절대 내리지 않는다
+            notes.append(f"{vid}: 세팅 v{wv} (세팅 사본 v{sver}보다 새것 — 그대로 둠)")
+        elif wv != sver:
             if wv.split(".")[0] != sver.split(".")[0]:
                 notes.append(f"{vid}: 세팅 v{wv} → v{sver}는 메이저 변경 — 확인 뒤 wiki-setting upgrade {vid} --yes")
                 bad = True
