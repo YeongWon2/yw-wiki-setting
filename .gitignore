@@ -1,0 +1,21 @@
+# Obsidian 기기 · 세션별 상태
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.trash/
+
+# 로컬 전용 설정 (전역 규칙 설치본, 개인 권한)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# 세팅 도구 로컬 상태
+.yw-wiki/
+
+# 큰 원본 파일 (필요하면 Git LFS로 전환)
+raw/assets/**/*.mp4
+raw/assets/**/*.mov
+
+# OS
+.DS_Store
+Thumbs.db
+__pycache__/

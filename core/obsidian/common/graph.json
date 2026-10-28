@@ -1,0 +1,7 @@
+{
+  "search": "-file:index -file:log -file:conflicts -path:_templates -path:tools",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true
+}

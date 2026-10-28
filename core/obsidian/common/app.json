@@ -1,0 +1,13 @@
+{
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "raw/notes",
+  "attachmentFolderPath": "raw/assets",
+  "userIgnoreFilters": [
+    "_templates/",
+    "tools/"
+  ],
+  "showUnsupportedFiles": false
+}

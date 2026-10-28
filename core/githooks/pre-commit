@@ -1,0 +1,3 @@
+#!/bin/sh
+# LLM 위키 pre-commit: tools/check.py (frontmatter · 템플릿 · 링크 · raw 불변 · index 최신).
+exec python3 tools/check.py
