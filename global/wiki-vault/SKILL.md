@@ -16,7 +16,7 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 1. `bin/wiki-setting list`로 등록된 볼트(id · 경로 · 이름 · 별칭 · 설명)를 본다. 이름 · 별칭 · 설명은 각 위키의 `wiki.toml` `[wiki]`에서 읽는다.
 2. 고르는 순서: 사용자가 말한 이름 · 별칭("업무 위키", "개인 위키", "work") → 지금 폴더가 볼트 안이면 그 볼트 → 요청 내용과 `description`이 맞는 볼트(회사 업무면 work, 학교 · 개인 프로젝트 · 일지 · 커리어면 personal).
 3. **찾기(query)는 여러 볼트를 함께 볼 수 있다.** 답마다 어느 볼트인지 밝힌다. **쓰기는 한 볼트에만** 한다. 애매하면 묻는다.
-4. `readonly = true`인 볼트(전사 위키)에는 어떤 경우에도 쓰지 않는다. 승격 PR은 업무 위키의 규칙(drafts → 사람 검토 → PR 전 확인)으로만 한다.
+4. `readonly = true`인 볼트(팀 · 전사 위키)에는 yw-wiki 스킬로 직접 쓰지 않는다. 승격은 업무 위키 규칙(drafts → 사람 검토 → 쓰기 직전 확인)을 거쳐 **그 위키 자신의 규칙과 스킬**(PR이든 main 직행이든)로만 한다.
 
 ## 2. 경로 찾기
 
@@ -43,5 +43,6 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 | 등록 | `wiki-setting register <폴더>` (전사 위키는 `--id company --readonly`) |
 | 새 볼트 | `wiki-setting new-vault --profile personal\|work --path <폴더>` |
 | 세팅 반영 | `wiki-setting upgrade [<id>]` (패치 · 마이너는 바로, 메이저는 확인) |
+| 승격 대상 위치 | `wiki-setting target <id> [--vault work]` (업무 위키 `wiki.toml` `[company.wikis.<id>]`로 찾고 등록, 없으면 `--clone`) |
 
 목록이나 볼트 파일을 바꾸는 명령(register · new-vault · upgrade)은 무엇이 바뀌는지 먼저 보여 주고 확인받는다.

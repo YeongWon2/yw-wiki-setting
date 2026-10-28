@@ -31,7 +31,7 @@ description: "[{{wiki_name}}] 위키를 점검하고 고친다(lint). tools/chec
 ## 4. work 위키만
 
 - DEC-ID 누락 · 중복은 오류다. 다음 번호를 붙여 고친다.
-- **대조(주 1회):** `[company.company_wiki] path`의 전사 위키를 `git pull`한 뒤, `published`가 있는 결정과 `review: merged` 초안이 가리키는 전사 위키 페이지를 읽어 내용이 다른 것을 review/에 `review_kind: reconcile`로 남긴다. 전사 위키에는 쓰지 않는다.
+- **대조(주 1회):** `[company.wikis.*]` 대상 위키마다 `wiki-setting target <id>`로 위치를 찾아 `git pull`한 뒤, `published`가 있는 결정과 `review: merged` 초안이 가리키는 대상 위키 페이지를 읽어 내용이 다른 것을 review/에 `review_kind: reconcile`로 남긴다. 전사 위키에는 쓰지 않는다.
 
 ## 5. 마무리
 

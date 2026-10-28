@@ -7,6 +7,7 @@
   wiki-setting new-vault --profile personal|work --path <폴더>   위키 생성 + 등록 + 첫 점검
   wiki-setting doctor [--fix]                            전역 스킬 · 목록 · 경로 · 세팅 버전 · 각 볼트 점검 (--fix: 옮겨진 볼트 경로 고침)
   wiki-setting upgrade [<id>] [--yes]                    세팅 최신 릴리스 태그를 받아 볼트에 반영 (메이저는 --yes)
+  wiki-setting target <id> [--vault <업무 위키 id>] [--clone]   승격 대상(팀 · 전사 위키) 위치 찾기 · 등록
   wiki-setting check [--vault <폴더>]                    최신 확인: 세팅 사본 → main의 최신 릴리스 태그, 전역 스킬 버전,
                                                          볼트 세팅 버전(패치 · 마이너는 반영 · 커밋, 메이저는 알림), 볼트 main 기준
 
@@ -277,6 +278,62 @@ def ensure_setting(conf):
     return sdir, (sdir / "VERSION").read_text().strip(), notes, bad
 
 
+def remote_repo(path):
+    """폴더의 origin이 가리키는 GitHub 'owner/name' (없으면 None)."""
+    url = git("remote", "get-url", "origin", cwd=path).stdout.strip()
+    m = re.search(r"github\.com[:/]([^/]+/[^/]+?)(?:\.git)?$", url)
+    return m.group(1).lower() if m else None
+
+
+def cmd_target(a):
+    """업무 위키 wiki.toml [company.wikis.<id>]의 대상 위키 위치를 찾는다. path → vaults.toml → 자주 쓰는 폴더 → (--clone) 받기."""
+    conf = load()
+    work_id = a.vault or "work"
+    if work_id not in conf.get("vaults", {}):
+        sys.exit(f"업무 위키 '{work_id}'가 볼트 목록에 없다 — wiki-setting register")
+    wpath = expand(conf["vaults"][work_id]["path"])
+    targets = tomllib.loads((wpath / "wiki.toml").read_text()).get("company", {}).get("wikis", {})
+    if a.id not in targets:
+        sys.exit(f"'{a.id}'가 {short(wpath)}/wiki.toml [company.wikis]에 없다. 있는 것: {', '.join(targets) or '없음'}")
+    tgt = targets[a.id]
+    repo = tgt.get("repo", "").lower()
+    found, how = None, ""
+    if tgt.get("path") and expand(tgt["path"]).exists():
+        found, how = expand(tgt["path"]), "wiki.toml path"
+    elif a.id in conf.get("vaults", {}) and expand(conf["vaults"][a.id]["path"]).exists():
+        found, how = expand(conf["vaults"][a.id]["path"]), "vaults.toml"
+    elif repo:
+        for root in SEARCH_ROOTS:
+            if not root.exists():
+                continue
+            for g in list(root.glob("*/.git")) + list(root.glob("*/*/.git")):
+                if remote_repo(g.parent) == repo:
+                    found, how = g.parent, f"{short(root)}에서 찾음"
+                    break
+            if found:
+                break
+    if not found and repo:
+        dest = HOME / "Desktop" / "wiki" / repo.split("/")[-1]
+        if not a.clone:
+            print(f"'{a.id}' 위치를 못 찾음 — 받으려면: wiki-setting target {a.id} --clone  ({repo} → {short(dest)})")
+            return 2
+        r = subprocess.run(["git", "clone", "--quiet", f"https://github.com/{tgt['repo']}.git", str(dest)], capture_output=True, text=True)
+        if r.returncode:
+            sys.exit(f"받지 못함: {r.stderr.strip()[:120]}")
+        found, how = dest, "새로 받음"
+    if not found:
+        sys.exit(f"'{a.id}' 위치를 못 찾음 — wiki.toml에 repo나 path를 적는다")
+    if repo and remote_repo(found) not in (None, repo):
+        sys.exit(f"{short(found)}의 원격이 {remote_repo(found)} — wiki.toml repo {repo}와 다르다")
+    v = conf.setdefault("vaults", {}).get(a.id)
+    if not v or expand(v["path"]) != found:
+        conf["vaults"][a.id] = {"path": short(found), "readonly": True}
+        save(conf, False)
+    rules = [n for n in ("AGENTS.md", "CLAUDE.md", "SCHEMA.md") if (found / n).exists()]
+    print(f"{a.id}: {found}  ({how}) · 반영 규칙: {', '.join(rules) or '없음 — 사람에게 절차를 묻는다'}")
+    return 0
+
+
 def cmd_check(a):
     conf = load()
     sdir, sver, notes, bad = ensure_setting(conf)
@@ -341,9 +398,10 @@ def main():
     s = sub.add_parser("doctor"); s.add_argument("--fix", action="store_true")
     s = sub.add_parser("upgrade"); s.add_argument("id", nargs="?"); s.add_argument("--yes", action="store_true")
     s = sub.add_parser("check"); s.add_argument("--vault")
+    s = sub.add_parser("target"); s.add_argument("id"); s.add_argument("--vault"); s.add_argument("--clone", action="store_true")
     a = p.parse_args()
     return {"install": cmd_install, "list": cmd_list, "path": cmd_path, "register": cmd_register,
-            "new-vault": cmd_new_vault, "doctor": cmd_doctor, "upgrade": cmd_upgrade, "check": cmd_check}[a.cmd](a)
+            "new-vault": cmd_new_vault, "doctor": cmd_doctor, "upgrade": cmd_upgrade, "check": cmd_check, "target": cmd_target}[a.cmd](a)
 
 
 if __name__ == "__main__":

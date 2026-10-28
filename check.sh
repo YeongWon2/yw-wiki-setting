@@ -89,6 +89,20 @@ for p in personal work; do git -C "$TMP/$p" reset -q --hard; done
 "$PY" "$WS" doctor > "$TMP/doctor" || { cat "$TMP/doctor"; fail "doctor"; }
 mv "$TMP/work" "$TMP/moved-work"
 "$PY" "$WS" doctor >/dev/null && fail "옮긴 볼트를 못 잡음"
+# 승격 대상: wiki.toml에 repo만 적어도 자주 쓰는 폴더에서 찾아 등록한다
+mv "$TMP/moved-work" "$TMP/work"
+CO="$HOME/Desktop/wiki/co-wiki"; mkdir -p "$CO" && git -C "$CO" init -q && git -C "$CO" remote add origin https://github.com/acme/co-wiki.git && echo "# 규칙" > "$CO/SCHEMA.md"
+sed -i.bak 's#^repo = "<조직>/<전사 위키 저장소>"#repo = "acme/co-wiki"#' "$TMP/work/wiki.toml" && rm "$TMP/work/wiki.toml.bak"
+"$PY" "$WS" target company | grep -q "SCHEMA.md" || fail "target이 repo로 위치를 못 찾음"
+"$PY" "$WS" list | grep -q "company: .*읽기 전용" || fail "target이 읽기 전용으로 등록하지 않음"
+"$PY" "$WS" target nope >/dev/null 2>&1 && fail "없는 대상을 통과시킴"
+# draft의 target_wiki는 [company.wikis]에 있어야 한다
+sed -e 's/{{title}}/승격 초안/g' -e 's/{{date}}/2026-10-28/g' -e 's/^target_wiki:.*/target_wiki: nope/' -e 's/^target_path:.*/target_path: concepts\/x/' \
+  "$TMP/work/_templates/draft.md" > "$TMP/work/wiki/drafts/승격 초안.md"
+"$PY" "$TMP/work/tools/index.py" "$TMP/work" >/dev/null
+"$PY" "$TMP/work/tools/check.py" "$TMP/work" | grep -q "target_wiki 'nope'" || fail "없는 target_wiki를 못 잡음"
+sed -i.bak 's/^target_wiki: nope/target_wiki: company/' "$TMP/work/wiki/drafts/승격 초안.md" && rm "$TMP/work/wiki/drafts/승격 초안.md.bak"
+"$PY" "$TMP/work/tools/check.py" "$TMP/work" | grep -q "target_wiki" && fail "맞는 target_wiki를 오류로 봄"
 echo "0.0.1" > "$HOME/.claude/skills/wiki-vault/VERSION"
 "$PY" "$WS" check >/dev/null 2>&1 || true  # 오프라인 시험이라 ⚠(1)가 정상
 [ "$(cat "$HOME/.claude/skills/wiki-vault/VERSION")" = "$(cat "$SETTING/VERSION")" ] || fail "check가 낡은 전역 스킬을 다시 깔지 않음"

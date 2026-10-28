@@ -25,6 +25,6 @@ description: "[{{wiki_name}}] 사람 검토 대기열(review/)을 보여 주고,
 - 결정의 근거로 남길 가치가 있으면 decision 페이지로 남긴다(예: 원본끼리 다른 것을 이렇게 정했다).
 - 반영한 항목 파일은 지운다(기록은 log와 git에 남는다).
 - `python3.14 tools/index.py` → `python3.14 tools/log.py review "<요약>" "정함 N" "보류 M" "버림 K"` → `python3.14 tools/check.py` → 커밋 · push.
-- work 위키에서 전사 위키와 다른 것(reconcile)을 "전사 위키를 고친다"로 정했으면, draft를 쓰고 PR 전에 다시 묻는다.
+- work 위키에서 대상 위키와 다른 것(reconcile)을 "대상 위키를 고친다"로 정했으면, draft를 쓰고 그 위키의 절차(PR 또는 main 직행)로 반영하기 직전에 다시 묻는다.
 
 보고 첫 줄: "정함 N · 보류 M · 버림 K, 남은 검토 R".

@@ -15,7 +15,7 @@
 - review/ 항목의 frontmatter(type: review · review_kind · status)가 틀렸다
 - raw/ 파일을 지우거나 옮겼다 (커밋에 올린 변경 기준)
 - index.md가 최신이 아니다 (python3.14 tools/index.py)
-- work: 결정에 DEC-ID가 없거나 형식이 틀리거나 겹친다. draft에 전사 위키 필수 필드가 없다
+- work: 결정에 DEC-ID가 없거나 형식이 틀리거나 겹친다. draft에 draft_of · target_wiki · target_path · review가 없거나 target_wiki가 [company.wikis]에 없다
 - [guard] terms(이 위키에 있으면 안 되는 말)가 [guard] allow 밖의 파일에 있다
 경고
 - raw/ 파일을 고쳤다 (사람이 고친 거면 괜찮다)
@@ -44,8 +44,7 @@ CONFIDENCE = {"high", "medium", "low"}
 ENTITY_KINDS = {"person", "org", "project", "course"}
 DECISION_STATUSES = {"proposed", "accepted", "superseded"}
 PROFILE_TYPES = {"personal": {"achievement"}, "work": set()}
-DRAFT_REQUIRED = ("draft_of", "target_path", "review", "type", "title", "description", "owner", "sources")
-DRAFT_TYPES = {"concept", "entity", "policy"}
+DRAFT_REQUIRED = ("draft_of", "target_wiki", "target_path", "review")  # 나머지 형식은 대상 위키 규칙
 REVIEWS = {"draft", "approved", "merged"}
 DATE_KEYS = ("created", "updated", "date", "checked")
 DEC_ID = re.compile(r"^DEC-\d{4}-\d{3}$")
@@ -170,13 +169,11 @@ def main():
             for key in DRAFT_REQUIRED:
                 if not meta.get(key):
                     errors.append(f"{rel}: draft에 {key}가 없음")
-            if meta.get("type") and meta["type"] not in DRAFT_TYPES:
-                errors.append(f"{rel}: draft type은 {sorted(DRAFT_TYPES)} 중 하나 (지금 {meta['type']})")
+            targets = conf.get("company", {}).get("wikis", {})
+            if meta.get("target_wiki") and meta["target_wiki"] not in targets:
+                errors.append(f"{rel}: target_wiki '{meta['target_wiki']}'가 wiki.toml [company.wikis]에 없음")
             if meta.get("review") and meta["review"] not in REVIEWS:
                 errors.append(f"{rel}: review는 {sorted(REVIEWS)} 중 하나")
-            tp = str(meta.get("target_path", ""))
-            if tp and (tp.split("/")[0] != meta.get("type", "") + "s" or not re.fullmatch(r"[a-z0-9/_-]+(\.md)?", tp)):
-                errors.append(f"{rel}: target_path는 <type>s/로 시작하는 영문 소문자 · 하이픈 경로 (지금 {tp})")
             continue
 
         for key in REQUIRED:
@@ -280,6 +277,9 @@ def main():
             hit = pattern.search(path.read_text())
             if hit:
                 errors.append(f"{rel}: 이 위키에 두지 않는 말 '{hit.group(0)}' ([guard] allow 밖)")
+
+    if "company_wiki" in conf.get("company", {}):
+        warnings.append("wiki.toml [company.company_wiki]는 옛 키 — [company.wikis.company]로 옮긴다 (name · repo · path)")
 
     pending = []
     for path in sorted((root / "review").glob("*.md")):

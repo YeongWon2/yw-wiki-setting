@@ -13,7 +13,7 @@
 | 회의 · 수집 자료 요약 | `wiki/sources/` | source |
 | 분석 · 비교 | `wiki/synthesis/` | synthesis |
 | 의사결정 | `wiki/decisions/` (파일 이름 `DEC-YYYY-NNN 제목.md`) | decision |
-| 전사 위키 승격 초안 | `wiki/drafts/` | draft |
+| 팀 · 전사 위키 승격 초안 | `wiki/drafts/` | draft |
 | 회의 메모 원본 | `raw/meetings/YYYY-MM-DD 제목.md` | — |
 | 업무 일지 | `raw/worklog/YYYY-MM-DD.md` | worklog |
 | Jira · Slack · 노션 수집 요약 | `raw/collected/` | — |
@@ -29,7 +29,7 @@
 
 `review/` 항목을 보여 줄 때 근거를 이 순서로 놓고, 위쪽을 기본 제안으로 둔다. 정하는 것은 여전히 사람이다.
 
-1. 전사 위키에 채택된 지식 (`[company.company_wiki]`)
+1. 팀 · 전사 위키에 채택된 지식 (`[company.wikis.*]`)
 2. 공유 원천: 병합된 PR · 커밋, Jira, Slack, 노션
 3. 내 업무 일지 · 회의 메모 (`raw/`)
 4. Claude의 추론 (`confidence: low`)
@@ -41,15 +41,17 @@
 - 결정마다 `decision_id: DEC-YYYY-NNN`을 붙인다. 연도별로 1부터 늘리며 다시 쓰지 않는다.
 - `canonical`에 정본 위치(repo / notion / confluence)를 적는다.
 
-## 5. 전사 위키 승격
+## 5. 팀 · 전사 위키 승격
 
-1. 채택할 만한 결정 · 지식을 `wiki/drafts/`에 draft 템플릿으로 쓴다. 형식은 전사 위키 `SCHEMA.md`를 따른다(근거는 공유 원천 URL만).
+승격 대상은 `wiki.toml`의 `[company.wikis.<id>]`에 적는다(전사 위키 · 팀 위키 여럿). 위치(`path`)를 몰라도 `repo`만 있으면 `wiki-setting target <id>`가 찾는다: `path` → `vaults.toml`의 같은 id → 자주 쓰는 폴더에서 원격이 같은 저장소 → 없으면 받을지 묻고 받는다. 찾은 위치는 `vaults.toml`에 읽기 전용으로 등록한다.
+
+1. 채택할 만한 결정 · 지식을 `wiki/drafts/`에 draft 템플릿으로 쓴다. `target_wiki`에 대상 id를 적고, 본문 형식은 **대상 위키의 문서 규칙**(그 위키의 `AGENTS.md` · `CLAUDE.md` · `SCHEMA.md`)을 따른다. 근거는 공유 원천 URL만 쓴다.
 2. 사람이 검토해 `review: approved`로 바꾼다.
-3. 전사 위키(`[company] company_wiki.path`)에서 브랜치 → PR. **PR 전에 묻는다.**
-4. 병합되면 `review: merged`, 결정의 `published`에 PR · 커밋 링크를 적는다.
+3. 대상 위키의 규칙과 스킬로 반영한다. **PR을 올리든 main에 바로 push하든 그 위키가 정한 절차를 따른다** (예: 지식은 main 직행 · 보호 파일만 PR). 대상 위키에 쓰기 직전에 한 번 묻는다.
+4. 반영되면 `review: merged`(main 직행이면 반영된 것), 결정의 `published`와 draft의 `published`에 커밋 · PR 링크를 적는다.
 
-- 대조: 주 1회 DEC-ID 기준으로 전사 위키와 비교해 다른 것을 `review/`에 `review_kind: reconcile`로 남긴다. 업무 위키와 전사 위키 중 어느 쪽을 고칠지는 사람이 review로 정한다.
-- 전사 위키 폴더에는 승격 PR 말고는 쓰지 않는다.
+- 대조: 주 1회 DEC-ID 기준으로 각 대상 위키와 비교해 다른 것을 `review/`에 `review_kind: reconcile`로 남긴다. 어느 쪽을 고칠지는 사람이 review로 정한다.
+- 대상 위키에는 승격 말고는 쓰지 않는다. 길잡이 `vaults.toml`의 `readonly`는 "yw-wiki 스킬이 직접 쓰지 않는다"는 뜻이고, 승격은 그 위키 자신의 절차로만 한다.
 
 ## 6. 경력 추출 (개인 위키로)
 

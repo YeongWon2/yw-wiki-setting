@@ -5,7 +5,7 @@
 id = "work"
 name = "개인 업무 위키"
 aliases = ["업무 위키", "회사 위키 초안", "work"]
-description = "<회사> 업무 기록, 결정, 전사 위키 승격 초안"
+description = "<회사> 업무 기록, 결정, 팀 · 전사 위키 승격 초안"
 profile = "work"
 language = "ko"
 
@@ -25,9 +25,16 @@ slack = "<워크스페이스>.slack.com"
 notion = "<노션 시작 페이지>"
 github = ["<조직>"]
 
-[company.company_wiki]          # 전사 위키. 이 위키 안에 넣지 않고 옆 폴더에 클론한다
+# 승격 대상 위키 (전사 · 팀). id 하나 = 위키 하나. repo만 있어도 wiki-setting target <id>가 위치를 찾는다.
+# 반영 절차(PR · main 직행)는 그 위키의 규칙을 따른다.
+[company.wikis.company]
+name = "<전사 위키 이름>"
 repo = "<조직>/<전사 위키 저장소>"
-path = "~/Desktop/wiki/<전사 위키 폴더>"
+# path = "~/Desktop/wiki/<폴더>"      # 선택. 알면 적는다
+
+# [company.wikis.team-<팀>]
+# name = "<팀 위키 이름>"
+# repo = "<조직>/<팀 위키 저장소>"
 
 # 프로젝트별 수집 경로. 키 = 프로젝트 entity 이름
 # jira: 이슈 키 · "epic:<키>" · JQL / slack: 채널 · 스레드 링크 / notion: 페이지 링크 / github: 저장소
