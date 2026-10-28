@@ -91,6 +91,30 @@ def state_toml(profile, managed):
             f'setting_repo = "{REPO}"\nmanaged = [\n{items},\n]\n')
 
 
+def ensure_gitignore(dest):
+    """.gitignore에 세팅이 정한 규칙이 다 있게 한다(위키가 더한 줄은 그대로). 이미 git에 올라간 무시 대상은 추적만 뺀다(파일은 남김).
+    바꾼 것 목록을 돌려준다."""
+    import subprocess
+    path = dest / ".gitignore"
+    have = path.read_text() if path.exists() else ""
+    have_rules = {l.strip() for l in have.splitlines()}
+    need = [l for l in (CORE / "gitignore").read_text().splitlines() if l.strip() and not l.startswith("#")]
+    missing = [l for l in need if l.strip() not in have_rules]
+    changed = []
+    if missing:
+        block = "\n# ── yw-wiki-setting이 더한 규칙 ──\n" + "\n".join(missing) + "\n"
+        path.write_text((have.rstrip("\n") + "\n" + block) if have else (CORE / "gitignore").read_text())
+        changed.append(f".gitignore 규칙 {len(missing)}개")
+    if (dest / ".git").exists():
+        tracked = subprocess.run(["git", "-C", str(dest), "ls-files", "-ci", "--exclude-standard"],
+                                 capture_output=True, text=True).stdout.split("\n")
+        tracked = [t for t in tracked if t]
+        if tracked:
+            subprocess.run(["git", "-C", str(dest), "rm", "-q", "--cached", "--", *tracked], check=True)
+            changed.append(f"git 추적에서 뺌: {', '.join(tracked)}")
+    return changed
+
+
 def write(dest, rel, text):
     path = dest / rel
     path.parent.mkdir(parents=True, exist_ok=True)

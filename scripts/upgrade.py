@@ -43,6 +43,11 @@ def main():
     if agents_new != agents_old:
         changed.append("AGENTS.md (core · profile)")
 
+    if a.dry_run:
+        ignore_changes = []
+    else:
+        ignore_changes = setting.ensure_gitignore(dest)
+    changed += ignore_changes
     if not changed and not removed and old_v == new_v:
         print(f"최신 (v{new_v})")
         return 0

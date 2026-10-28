@@ -44,14 +44,15 @@ def create(profile, dest, in_place=False, git=True):
     setting.write(dest, "CLAUDE.md", "@AGENTS.md\n")
     setting.write(dest, ".wiki-setting.toml", setting.state_toml(profile, managed))
 
-    once = {".gitignore": (setting.CORE / "gitignore").read_text()}
+    once = {}
     for src in sorted((setting.CORE / "obsidian" / "common").glob("*.json")) + \
             sorted((setting.CORE / "obsidian" / profile).glob("*.json")):
         once[f".obsidian/{src.name}"] = src.read_text()
     for rel, text in once.items():
-        if not (dest / rel).exists() or rel.startswith(".obsidian/") or rel == ".gitignore":
+        if not (dest / rel).exists() or rel.startswith(".obsidian/"):
             setting.write(dest, rel, text)
 
+    setting.ensure_gitignore(dest)
     tools = dest / "tools"
     if not (dest / "wiki" / "log.md").exists():
         subprocess.run([sys.executable, str(tools / "log.py"), str(dest), "setup",

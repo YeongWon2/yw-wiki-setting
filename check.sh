@@ -20,7 +20,11 @@ for p in personal work; do
   grep -rq '{{wiki_name}}' "$W/.claude/skills" && fail "$p 스킬 이름 치환 안 됨"
   [ "$(git -C "$W" config core.hooksPath)" = ".githooks" ] || fail "$p 훅 연결"
   [ -f "$W/.claude/settings.json" ] && grep -q "version.py" "$W/.claude/settings.json" || fail "$p 세션 시작 최신 확인 훅 없음"
-  grep -q "^.obsidian/graph.json" "$W/.gitignore" && grep -q '"obsidian-git"' "$W/.obsidian/community-plugins.json" || fail "$p gitignore · 플러그인 목록"
+  grep -q '"obsidian-git"' "$W/.obsidian/community-plugins.json" || fail "$p 플러그인 목록"
+  for f in .obsidian/graph.json .obsidian/workspace.json .obsidian/types.json .obsidian/plugins/obsidian-git/main.js .yw-wiki/version-check; do
+    git -C "$W" check-ignore -q "$f" || fail "$p gitignore가 $f를 무시하지 않음"
+  done
+  git -C "$W" check-ignore -q .obsidian/plugins/obsidian-git/data.json && fail "$p 플러그인 설정 data.json까지 무시함"
   [ -f "$W/.obsidian/graph.json" ] && [ -f "$W/.obsidian/plugins/obsidian-git/data.json" ] || fail "$p Obsidian 기본값 안 깔림"
   "$PY" "$W/tools/version.py" "$W" --hook | grep -q "main" || fail "$p version.py (main 확인)"
 
@@ -58,6 +62,13 @@ for p in personal work; do
   grep -q "로컬 규칙 하나" "$W/AGENTS.md" || fail "$p upgrade가 local 구간을 지움"
   grep -q "upgrade |" "$W/wiki/log.md" || fail "$p upgrade 기록 없음"
   "$PY" "$W/tools/check.py" "$W" >/dev/null || fail "$p upgrade 뒤 점검 오류"
+
+  # 옛 .gitignore에 규칙이 빠지고 무시 대상이 git에 올라가 있어도 upgrade가 맞춘다
+  printf '.DS_Store\n' > "$W/.gitignore"; git -C "$W" add -f .gitignore .obsidian/graph.json >/dev/null 2>&1
+  "$PY" "$SETTING/scripts/upgrade.py" "$W" >/dev/null
+  git -C "$W" check-ignore -q .obsidian/graph.json || fail "$p upgrade가 .gitignore 규칙을 더하지 않음"
+  git -C "$W" ls-files --error-unmatch .obsidian/graph.json >/dev/null 2>&1 && fail "$p upgrade가 무시 대상을 추적에서 빼지 않음"
+  [ -f "$W/.obsidian/graph.json" ] || fail "$p upgrade가 graph.json 파일까지 지움"
 
   # raw 삭제는 커밋 점검에서 오류
   echo "원본" > "$W/raw/assets/a.md"

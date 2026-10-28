@@ -1,9 +1,12 @@
 # ── 열 때마다 · 조작할 때마다 바뀌는 Obsidian 상태 (기기마다 다름) ──
+# (git은 줄 중간의 #를 주석으로 보지 않는다. 설명은 항상 규칙 위 줄에 쓴다)
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/workspaces.json
-.obsidian/graph.json          # 그래프 화면 상태. 기본 필터는 tools/plugins.py가 없을 때만 깐다
-.obsidian/types.json          # 속성 종류 — 자동으로 갱신됨
+# 그래프 화면 상태. 기본 필터는 tools/plugins.py가 없을 때만 깐다
+.obsidian/graph.json
+# 속성 종류 — 자동으로 갱신됨
+.obsidian/types.json
 .obsidian/cache
 .trash/
 
@@ -15,7 +18,8 @@
 # ── 로컬 전용 ──
 CLAUDE.local.md
 .claude/settings.local.json
-.yw-wiki/                     # 최신 확인 시각 등 도구 로컬 상태
+# 최신 확인 시각 등 도구 로컬 상태
+.yw-wiki/
 
 # ── 큰 원본 파일 (필요하면 Git LFS로 전환) ──
 raw/assets/**/*.mp4
