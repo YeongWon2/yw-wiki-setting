@@ -11,6 +11,7 @@
 | 새 위키 만들기 | `python3.14 scripts/new_wiki.py --profile personal --dest <경로>` (업무는 `--profile work`) |
 | 위키에 새 버전 반영 | `python3.14 scripts/upgrade.py <위키 경로>` (메이저는 `--yes`) |
 | 세팅 바꾼 뒤 점검 | `sh check.sh` (통과한 커밋에만 `vX.Y.Z` 태그) |
+| 이 PC에 길잡이 스킬 깔기 | `python3.14 global/wiki-vault/bin/wiki-setting install` → `register <위키 폴더>` (볼트 목록 `~/.config/wiki/vaults.toml`) |
 
 ## 위키 안에서 말하기 (스킬 5개)
 

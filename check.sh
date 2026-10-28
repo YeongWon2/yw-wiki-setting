@@ -62,4 +62,17 @@ for p in personal work; do
   (cd "$W" && "$PY" tools/check.py >/dev/null) && fail "$p raw 삭제를 못 잡음"
   echo "통과: $p"
 done
+# 전역: 길잡이 스킬 설치 · 볼트 등록 · doctor (임시 HOME)
+WS="$SETTING/global/wiki-vault/bin/wiki-setting"
+"$PY" "$WS" install >/dev/null || fail "install"
+[ -f "$HOME/.claude/skills/wiki-vault/SKILL.md" ] && [ -f "$HOME/.agents/skills/wiki-vault/bin/wiki-setting" ] || fail "전역 스킬 복사 안 됨"
+"$PY" "$WS" register "$TMP/personal" >/dev/null && "$PY" "$WS" register "$TMP/work" >/dev/null || fail "register"
+"$PY" "$WS" list | grep -q "work: " || fail "list"
+[ "$("$PY" "$WS" path personal)" = "$(cd "$TMP/personal" && pwd -P)" ] || fail "path"
+# 다음 셋은 앞의 raw 삭제 시험이 남긴 상태라 점검이 실패하므로 되돌린 뒤 본다
+for p in personal work; do git -C "$TMP/$p" reset -q --hard; done
+"$PY" "$WS" doctor > "$TMP/doctor" || { cat "$TMP/doctor"; fail "doctor"; }
+mv "$TMP/work" "$TMP/moved-work"
+"$PY" "$WS" doctor >/dev/null && fail "옮긴 볼트를 못 잡음"
+echo "통과: 전역"
 echo "check.sh 통과"
