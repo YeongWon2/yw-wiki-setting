@@ -1,5 +1,10 @@
 """new_wiki.py · upgrade.py가 같이 쓰는 것: 세팅이 관리하는 파일 목록과 AGENTS.md 합성."""
 import re
+import sys
+
+if sys.version_info < (3, 11):  # tomllib
+    sys.exit(f"Python 3.11 이상이 필요하다 (지금 {sys.version.split()[0]}). 예: brew install python")
+
 import tomllib
 from pathlib import Path
 
