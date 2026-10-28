@@ -1,0 +1,21 @@
+# 개인 위키 설정. 위키가 소유한다(upgrade.py가 건드리지 않음). 비밀번호 · 토큰 · 이메일은 넣지 않는다.
+
+[wiki]
+id = "personal"
+name = "개인 위키"
+aliases = ["개인 위키", "내 위키", "personal"]
+description = "나, 사람, 개인 프로젝트, 학교, 일지, 커리어"
+profile = "personal"
+language = "ko"
+
+[entities]
+kinds = ["people", "orgs", "projects"]
+
+[folders]                       # profile 전용 폴더
+wiki = ["career"]
+raw = ["daily", "notes", "assets"]
+
+# 개인 프로젝트 수집 경로 (있을 때만)
+# [projects."<프로젝트>"]
+# web = ["https://…"]
+# github = ["YeongWon2/<저장소>"]
