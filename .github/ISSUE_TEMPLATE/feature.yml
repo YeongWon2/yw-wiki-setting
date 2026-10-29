@@ -1,0 +1,38 @@
+name: 기능 제안
+description: 새 기능이나 개선을 제안할 때
+labels: ["type: feature", "status: needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 지금 무엇이 불편한가
+      description: 해결책보다 겪은 문제를 먼저 쓴다
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 제안
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 생각해 본 다른 방법
+  - type: dropdown
+    id: impact
+    attributes:
+      label: 얼마나 필요한가
+      description: 최종 우선순위(P0~P3)는 관리자가 정한다
+      options:
+        - 이게 없으면 쓰기 어렵다
+        - 있으면 자주 쓴다
+        - 있으면 좋다
+    validations:
+      required: true
+  - type: checkboxes
+    id: pr
+    attributes:
+      label: 직접 만들기
+      options:
+        - label: 방향이 정해지면 PR을 보낼 수 있다

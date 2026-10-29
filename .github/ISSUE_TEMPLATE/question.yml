@@ -1,0 +1,11 @@
+name: 질문
+description: 사용법이나 설계가 궁금할 때
+labels: ["type: question", "status: needs-triage"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: 궁금한 것
+      description: 하려던 일과 막힌 지점을 같이 쓴다
+    validations:
+      required: true

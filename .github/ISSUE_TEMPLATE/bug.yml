@@ -1,0 +1,43 @@
+name: 버그
+description: 동작이 기대와 다를 때
+labels: ["type: bug", "status: needs-triage"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 무엇이 잘못됐나
+      description: 한 줄로 먼저 쓴다. 예) `wiki-setting check`가 최신 릴리스를 못 받는다
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 다시 겪는 방법
+      placeholder: |
+        1. 실행한 명령
+        2. 넣은 입력
+        3. 나온 결과
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대한 결과
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: 얼마나 막혔나
+      description: 최종 우선순위(P0~P3)는 관리자가 정한다
+      options:
+        - 쓸 수 없다 (우회 방법 없음)
+        - 불편하지만 우회할 수 있다
+        - 사소하다
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: 환경
+      placeholder: 세팅 버전(VERSION), OS, Python 버전
