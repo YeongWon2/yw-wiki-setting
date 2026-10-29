@@ -4,7 +4,7 @@
 오류(종료 코드 1)
 - wiki/ 페이지에 frontmatter가 없거나 공통 필드(REQUIRED)가 빠졌다
 - type · status · confidence · entity_kind · decision_status가 정해진 값이 아니다
-- type과 폴더가 맞지 않는다 (entity → wiki/entities/ …, draft는 wiki/drafts/)
+- type과 폴더가 맞지 않는다 (entity → wiki/entities/ …)
 - 템플릿(_templates/<type>.md)의 ## 제목이 빠졌거나 순서가 다르다
 - 날짜(created · updated · date · checked)가 YYYY-MM-DD가 아니거나, updated가 created보다 이르거나, 오늘보다 뒤다
 - 템플릿 자리표시({{date}} · {{title}})가 남아 있다
@@ -15,7 +15,6 @@
 - review/ 항목의 frontmatter(type: review · review_kind · status)가 틀렸다
 - raw/ 파일을 지우거나 옮겼다 (커밋에 올린 변경 기준)
 - index.md가 최신이 아니다 (python3.14 tools/index.py)
-- work: 결정에 DEC-ID가 없거나 형식이 틀리거나 겹친다. draft에 draft_of · target_wiki · target_path · review가 없거나 target_wiki가 [company.wikis]에 없다
 - [guard] terms(이 위키에 있으면 안 되는 말)가 [guard] allow 밖의 파일에 있다
 경고
 - raw/ 파일을 고쳤다 (사람이 고친 거면 괜찮다)
@@ -23,7 +22,6 @@
 - Key facts가 12개를 넘는다 (페이지를 나눈다)
 - 진행 중인 project · course를 STALE_DAYS일 넘게 고치지 않음 · source 원본 확인(checked)이 STALE_DAYS일 넘음
 - proposed 결정이 PROPOSAL_DAYS일 넘음
-- work: 회사 출처가 아닌 URL을 sources에 씀 · 결정 파일 이름이 DEC-ID로 시작하지 않음
 - review/에 pending 항목이 있다 (yw-wiki-review로 정한다) · REVIEW_DAYS일 넘은 pending
 오늘 날짜는 YW_TODAY(YYYY-MM-DD)로 바꿔 볼 수 있다.
   python3.14 tools/check.py [위키 경로]
@@ -34,7 +32,6 @@ import subprocess
 import sys
 from datetime import date, timedelta
 import urllib.parse
-from urllib.parse import urlparse
 
 import index as index_tool
 import wikilib
@@ -44,11 +41,8 @@ STATUSES = {"active", "superseded", "archived"}
 CONFIDENCE = {"high", "medium", "low"}
 ENTITY_KINDS = {"person", "org", "project", "course"}
 DECISION_STATUSES = {"proposed", "accepted", "superseded"}
-PROFILE_TYPES = {"personal": {"achievement"}, "work": set()}
-DRAFT_REQUIRED = ("draft_of", "target_wiki", "target_path", "review")  # 나머지 형식은 대상 위키 규칙
-REVIEWS = {"draft", "approved", "merged"}
+PROFILE_TYPES = {"personal": {"achievement"}}
 DATE_KEYS = ("created", "updated", "date", "checked")
-DEC_ID = re.compile(r"^DEC-\d{4}-\d{3}$")
 PLACEHOLDER = re.compile(r"\{\{\s*(date|title|time)[^}]*\}\}")
 LEGACY = re.compile(r"\[!hero\]|\[!cols\]|yw-wide|^## 🔗 참조", re.M)
 CONFLICT = re.compile(r"^## Contradictions\s*$", re.M)
@@ -58,7 +52,7 @@ MAX_FACTS = 12
 STALE_DAYS = 30
 PROPOSAL_DAYS = 14
 REVIEW_DAYS = 14
-REVIEW_KINDS = {"conflict", "stale", "orphan", "duplicate", "raw-change", "reconcile", "career-filter"}
+REVIEW_KINDS = {"conflict", "stale", "orphan", "duplicate", "raw-change"}
 
 
 def today():
@@ -99,23 +93,6 @@ def staged_raw_changes(root):
     return [(line.split("\t")[0][0], line.split("\t")[-1]) for line in out.splitlines() if line]
 
 
-def company_hosts(conf):
-    src = conf.get("company", {}).get("sources", {})
-    hosts, orgs = set(), set()
-    for key, value in src.items():
-        values = value if isinstance(value, list) else [value]
-        for v in values:
-            if key == "github":
-                orgs.add(v.lower())
-            elif "://" in v:
-                hosts.add(urlparse(v).netloc.lower())
-            elif v and not v.startswith("<"):
-                hosts.add(v.lower())
-    if "notion" in src:
-        hosts |= {"www.notion.so", "notion.so", "app.notion.com"}
-    return hosts, orgs
-
-
 def main():
     root = wikilib.root_from_argv()
     conf = wikilib.config(root)
@@ -135,8 +112,6 @@ def main():
         templates[t.stem] = headings(wikilib.frontmatter(t.read_text())[1])
 
     incoming = {}
-    decision_ids = {}
-    hosts, orgs = company_hosts(conf)
 
     # 링크는 wiki/ · raw/ · 루트 문서 모두에서 본다
     for path, rel in files:
@@ -172,19 +147,6 @@ def main():
         if PLACEHOLDER.search(wikilib.strip_code(text)):
             errors.append(f"{rel}: 템플릿 자리표시가 남아 있음")
         top = rel.parts[1] if len(rel.parts) > 2 else ""
-
-        if top == wikilib.DRAFT_DIR:
-            if profile != "work":
-                errors.append(f"{rel}: drafts/는 work 위키에만 둔다")
-            for key in DRAFT_REQUIRED:
-                if not meta.get(key):
-                    errors.append(f"{rel}: draft에 {key}가 없음")
-            targets = conf.get("company", {}).get("wikis", {})
-            if meta.get("target_wiki") and meta["target_wiki"] not in targets:
-                errors.append(f"{rel}: target_wiki '{meta['target_wiki']}'가 wiki.toml [company.wikis]에 없음")
-            if meta.get("review") and meta["review"] not in REVIEWS:
-                errors.append(f"{rel}: review는 {sorted(REVIEWS)} 중 하나")
-            continue
 
         for key in REQUIRED:
             if key not in meta or meta[key] == "" and key not in ("sources", "related"):
@@ -238,33 +200,11 @@ def main():
             d = parse_date(meta.get("date", ""))
             if ds == "proposed" and d and now - d > timedelta(days=PROPOSAL_DAYS):
                 warnings.append(f"{rel}: proposed가 {PROPOSAL_DAYS}일 넘음 ({d})")
-            did = str(meta.get("decision_id", ""))
-            if profile == "work":
-                if not DEC_ID.match(did):
-                    errors.append(f"{rel}: decision_id가 DEC-YYYY-NNN이 아님 ({did or '없음'})")
-                else:
-                    decision_ids.setdefault(did, []).append(rel)
-                    if not path.stem.startswith(did):
-                        warnings.append(f"{rel}: 결정 파일 이름이 {did}로 시작하지 않음")
         if key_facts(body) > MAX_FACTS:
             warnings.append(f"{rel}: Key facts {key_facts(body)}개 — {MAX_FACTS}개를 넘으면 나눈다")
-        if profile == "work":
-            srcs = meta.get("sources") or []
-            srcs = (srcs if isinstance(srcs, list) else [srcs]) + [meta.get("source_url") or ""]
-            for s in srcs:
-                if "://" not in str(s):
-                    continue
-                u = urlparse(str(s))
-                host, first = u.netloc.lower(), u.path.strip("/").split("/")[0].lower()
-                if not (host in hosts or any(host.endswith("." + h) for h in hosts)
-                        or (host == "github.com" and first in orgs)):
-                    warnings.append(f"{rel}: 회사 출처가 아닌 URL {s}")
         if path.stem not in incoming:
             warnings.append(f"{rel}: 들어오는 링크가 없는 고아 페이지")
 
-    for did, rels in decision_ids.items():
-        if len(rels) > 1:
-            errors.append(f"{did}가 겹침: {', '.join(map(str, rels))}")
     for name, rels in names.items():
         md = [r for r in rels if r.suffix == ".md" and r.parts[0] in ("wiki", "raw")]
         if len(md) > 1:
@@ -287,9 +227,6 @@ def main():
             hit = pattern.search(path.read_text())
             if hit:
                 errors.append(f"{rel}: 이 위키에 두지 않는 말 '{hit.group(0)}' ([guard] allow 밖)")
-
-    if "company_wiki" in conf.get("company", {}):
-        warnings.append("wiki.toml [company.company_wiki]는 옛 키 — [company.wikis.company]로 옮긴다 (name · repo · path)")
 
     pending = []
     for path in sorted((root / "review").glob("*.md")):

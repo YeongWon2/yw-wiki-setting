@@ -1,10 +1,10 @@
 #!/bin/sh
 # 시나리오 시험: 실제 위키의 임시 복사본으로 사용 흐름을 처음부터 끝까지 돌린다. 실제 위키 · 원격은 건드리지 않는다.
-#   sh e2e.sh <개인 위키> <업무 위키>
+#   sh e2e.sh <개인 위키>
 # 보는 것: 세션 훅 → 갱신 → 업데이트(새 원본 → source · index · log → 커밋 훅) → 충돌 → review → 리뷰 반영 →
 #          lint(망가뜨린 것을 잡음) → 짧은 PATH(Obsidian)에서 커밋 → 원격이 앞섰을 때 자동으로 받기 → main이 아니면 경고
 set -eu
-PERSONAL=$(cd "$1" && pwd); WORK=$(cd "$2" && pwd)
+PERSONAL=$(cd "$1" && pwd)
 SETTING=$(cd "$(dirname "$0")" && pwd)
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
@@ -20,14 +20,15 @@ export HOME="$TMP/home"; mkdir -p "$HOME/.cache"
 cp -R "$REAL_HOME/.cache/yw-wiki" "$HOME/.cache/" 2>/dev/null || true
 git clone -q "$SETTING" "$TMP/setting" && git -C "$TMP/setting" remote remove origin
 cp "$SETTING"/VERSION "$TMP/setting/VERSION"
-for f in $(git -C "$SETTING" diff --name-only HEAD; git -C "$SETTING" ls-files --others --exclude-standard); do
+for f in $(git -C "$SETTING" -c core.quotepath=false diff --name-only --diff-filter=d HEAD; git -C "$SETTING" -c core.quotepath=false ls-files --others --exclude-standard); do
   mkdir -p "$TMP/setting/$(dirname "$f")"; cp "$SETTING/$f" "$TMP/setting/$f"   # 커밋 전 변경도 시험한다
 done
+for f in $(git -C "$SETTING" -c core.quotepath=false diff --name-only --diff-filter=D HEAD); do rm -f "$TMP/setting/$f"; done   # 커밋 전 삭제도
 "$PY" "$TMP/setting/global/wiki-vault/bin/wiki-setting" install >/dev/null
 printf 'version = 1\ndefault = "personal"\n\n[setting]\npath = "%s"\n' "$TMP/setting" > "$HOME/.config/wiki/vaults.toml"
 WS="$HOME/.claude/skills/wiki-vault/bin/wiki-setting"
 
-for src in "$PERSONAL" "$WORK"; do
+for src in "$PERSONAL"; do
   name=$(basename "$src")
   # 원격 흉내: bare 저장소 하나와 복사본 둘(A: 내 PC, B: 다른 기기)
   git clone -q --bare "$src" "$TMP/$name.git"
@@ -55,13 +56,12 @@ for src in "$PERSONAL" "$WORK"; do
   ok "$name 세션 훅 — $OUT"
 
   # 2. 업데이트: 새 원본 → source 페이지 → index · log → 커밋(훅이 점검)
-  if grep -q 'profile = "work"' "$A/wiki.toml"; then RAW=raw/meetings; else RAW=raw/notes; fi
+  RAW=raw/notes
   mkdir -p "$A/$RAW"
   printf -- '---\ntype: note\ndate: %s\n---\n\n# e2e 시험 메모\n\n시험 사실: 시나리오 시험이 돈다.\n' "$YW_TODAY" > "$A/$RAW/$YW_TODAY e2e 시험.md"
   sed -e "s/{{title}}/e2e 시험/g" -e "s/{{date}}/$YW_TODAY/g" -e 's/^source_kind:.*/source_kind: doc/' \
       -e "s#^sources: \[\]#sources: [\"$RAW/$YW_TODAY e2e 시험.md\"]#" -e 's/^related: \[\]/related: ["[[황영원]]"]/' \
       "$A/_templates/source.md" > "$A/wiki/sources/e2e 시험.md"
-  grep -q 'profile = "work"' "$A/wiki.toml" && sed -i.bak 's/\[\[황영원\]\]/[[QMIT]]/' "$A/wiki/sources/e2e 시험.md" && rm "$A/wiki/sources/e2e 시험.md.bak"
   "$PY" "$A/tools/index.py" "$A" >/dev/null
   "$PY" "$A/tools/log.py" "$A" update "e2e 시험" "source 1" >/dev/null
   git -C "$A" add -A
@@ -115,8 +115,8 @@ for src in "$PERSONAL" "$WORK"; do
 done
 
 # 8. 길잡이: 목록 · 경로 · 확인 · doctor (임시 HOME의 등록)
-"$PY" "$WS" list | grep -q "work:" || fail "길잡이 목록"
-[ -d "$("$PY" "$WS" path work)" ] || fail "길잡이 경로"
+"$PY" "$WS" list | grep -q "^personal.*: " || fail "길잡이 목록"
+[ -d "$("$PY" "$WS" path personal)" ] || fail "길잡이 경로"
 "$PY" "$WS" check > "$TMP/c" 2>&1 || true
 grep -q "세팅 v$(cat "$SETTING/VERSION")" "$TMP/c" || { cat "$TMP/c"; fail "길잡이 check"; }
 ok "길잡이 목록 · 경로 · check — $(cut -c1-140 "$TMP/c")"

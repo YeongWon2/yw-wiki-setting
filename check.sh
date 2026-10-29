@@ -1,5 +1,5 @@
 #!/bin/sh
-# 세팅 점검: 임시 HOME에서 두 유형을 새로 만들고 점검 · 업그레이드가 도는지 본다. 릴리스 태그는 이게 통과한 커밋에만 단다.
+# 세팅 점검: 임시 HOME에서 개인 위키를 새로 만들고 점검 · 업그레이드가 도는지 본다. 릴리스 태그는 이게 통과한 커밋에만 단다.
 set -eu
 SETTING=$(cd "$(dirname "$0")" && pwd)
 TMP=$(mktemp -d)
@@ -11,7 +11,7 @@ git config --global user.email check@example.invalid >/dev/null 2>&1 || true
 PY=$(command -v python3.15 || command -v python3.14 || command -v python3)
 fail() { echo "실패: $1"; exit 1; }
 
-for p in personal work; do
+for p in personal; do
   W="$TMP/$p"
   "$PY" "$SETTING/scripts/new_wiki.py" --profile "$p" --dest "$W" >/dev/null || fail "$p 생성 직후 check.py 오류"
   "$PY" "$W/tools/index.py" "$W" --check >/dev/null || fail "$p index 최신 아님"
@@ -88,34 +88,24 @@ done
 WS="$SETTING/global/wiki-vault/bin/wiki-setting"
 "$PY" "$WS" install >/dev/null || fail "install"
 [ -f "$HOME/.claude/skills/wiki-vault/SKILL.md" ] && [ -f "$HOME/.agents/skills/wiki-vault/bin/wiki-setting" ] || fail "전역 스킬 복사 안 됨"
-"$PY" "$WS" register "$TMP/personal" >/dev/null && "$PY" "$WS" register "$TMP/work" >/dev/null || fail "register"
-"$PY" "$WS" list | grep -q "work: " || fail "list"
+"$PY" "$WS" register "$TMP/personal" >/dev/null || fail "register"
+"$PY" "$WS" list | grep -q "^personal.*: " || fail "list"
 [ "$("$PY" "$WS" path personal)" = "$(cd "$TMP/personal" && pwd -P)" ] || fail "path"
 # 다음 셋은 앞의 raw 삭제 시험이 남긴 상태라 점검이 실패하므로 되돌린 뒤 본다
-for p in personal work; do git -C "$TMP/$p" reset -q --hard; done
+git -C "$TMP/personal" reset -q --hard
 "$PY" "$WS" doctor > "$TMP/doctor" || { cat "$TMP/doctor"; fail "doctor"; }
-mv "$TMP/work" "$TMP/moved-work"
+mv "$TMP/personal" "$TMP/moved-personal"
 "$PY" "$WS" doctor >/dev/null && fail "옮긴 볼트를 못 잡음"
-# 승격 대상: wiki.toml에 repo만 적어도 자주 쓰는 폴더에서 찾아 등록한다
-mv "$TMP/moved-work" "$TMP/work"
-CO="$HOME/Desktop/wiki/co-wiki"; mkdir -p "$CO" && git -C "$CO" init -q && git -C "$CO" remote add origin https://github.com/acme/co-wiki.git && echo "# 규칙" > "$CO/SCHEMA.md"
-sed -i.bak 's#^repo = "<조직>/<전사 위키 저장소>"#repo = "acme/co-wiki"#' "$TMP/work/wiki.toml" && rm "$TMP/work/wiki.toml.bak"
-"$PY" "$WS" target company | grep -q "SCHEMA.md" || fail "target이 repo로 위치를 못 찾음"
-"$PY" "$WS" list | grep -q "company: .*읽기 전용" || fail "target이 읽기 전용으로 등록하지 않음"
-"$PY" "$WS" target nope >/dev/null 2>&1 && fail "없는 대상을 통과시킴"
-# draft의 target_wiki는 [company.wikis]에 있어야 한다
-sed -e 's/{{title}}/승격 초안/g' -e 's/{{date}}/2026-10-28/g' -e 's/^target_wiki:.*/target_wiki: nope/' -e 's/^target_path:.*/target_path: concepts\/x/' \
-  "$TMP/work/_templates/draft.md" > "$TMP/work/wiki/drafts/승격 초안.md"
-"$PY" "$TMP/work/tools/index.py" "$TMP/work" >/dev/null
-"$PY" "$TMP/work/tools/check.py" "$TMP/work" | grep -q "target_wiki 'nope'" || fail "없는 target_wiki를 못 잡음"
-sed -i.bak 's/^target_wiki: nope/target_wiki: company/' "$TMP/work/wiki/drafts/승격 초안.md" && rm "$TMP/work/wiki/drafts/승격 초안.md.bak"
-"$PY" "$TMP/work/tools/check.py" "$TMP/work" | grep -q "target_wiki" && fail "맞는 target_wiki를 오류로 봄"
+mv "$TMP/moved-personal" "$TMP/personal"
 echo "0.0.1" > "$HOME/.claude/skills/wiki-vault/VERSION"
 "$PY" "$WS" check >/dev/null 2>&1 || true  # 오프라인 시험이라 ⚠(1)가 정상
 [ "$(cat "$HOME/.claude/skills/wiki-vault/VERSION")" = "$(cat "$SETTING/VERSION")" ] || fail "check가 낡은 전역 스킬을 다시 깔지 않음"
 # 버전은 내리지 않는다: 위키가 세팅보다 새것이면 그대로
-sed -i.bak 's/^version = .*/version = "99.0.0"/' "$TMP/work/.wiki-setting.toml" && rm "$TMP/work/.wiki-setting.toml.bak"
-"$PY" "$WS" check --vault "$TMP/work" >/dev/null 2>&1 || true
-grep -q '^version = "99.0.0"' "$TMP/work/.wiki-setting.toml" || fail "check가 위키 세팅 버전을 내림"
+sed -i.bak 's/^version = .*/version = "99.0.0"/' "$TMP/personal/.wiki-setting.toml" && rm "$TMP/personal/.wiki-setting.toml.bak"
+"$PY" "$WS" check --vault "$TMP/personal" >/dev/null 2>&1 || true
+grep -q '^version = "99.0.0"' "$TMP/personal/.wiki-setting.toml" || fail "check가 위키 세팅 버전을 내림"
+# work 프로필은 없앴다 (2026-10-29): 만들 수 없어야 한다
+"$PY" "$SETTING/scripts/new_wiki.py" --profile work --dest "$TMP/work" >/dev/null 2>&1 && fail "없앤 work 프로필로 위키가 만들어짐"
+"$PY" "$WS" target company >/dev/null 2>&1 && fail "없앤 target 명령이 돎"
 echo "통과: 전역"
 echo "check.sh 통과"

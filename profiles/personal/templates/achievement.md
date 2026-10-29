@@ -5,8 +5,8 @@ period:                 # YYYY-MM-DD~YYYY-MM-DD
 org:                    # "[[QMIT]]" 같은 조직 entity
 skills: []
 status: active          # active | superseded | archived
-confidence: medium      # 업무 위키에서 자동 추출한 것은 medium
-sources: []             # 업무 위키에서 온 것은 "yw-work-wiki:<페이지>"처럼 위키 이름을 붙인다
+confidence: medium      # 이력서 등 원본으로 확인한 것은 high
+sources: []             # 공개 가능한 근거만 (이력서 · 공개 저장소 등)
 related: []
 aliases: []
 tags: []

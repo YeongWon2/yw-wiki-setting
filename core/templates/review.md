@@ -1,9 +1,9 @@
 ---
 type: review
-review_kind:            # conflict | stale | orphan | duplicate | raw-change | reconcile | career-filter
+review_kind:            # conflict | stale | orphan | duplicate | raw-change
 status: pending         # pending | resolved
 page:                   # "[[대상 페이지]]" (새 페이지 후보면 비움)
-found_by:               # update | lint | reconcile | career
+found_by:               # update | lint
 created: {{date}}
 ---
 

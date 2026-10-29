@@ -1,6 +1,6 @@
 ---
 name: wiki-vault
-description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/vaults.toml)에서 맞는 위키(개인 위키 · 개인 업무 위키 · 전사 위키)를 골라 그 위키의 AGENTS.md와 yw-wiki-* 스킬로 넘긴다. 위키를 직접 쓰지 않는다. "개인 위키에서 찾아줘", "업무 위키 업데이트해줘", "내 위키 갱신해줘", "위키 리뷰해줘", "위키 점검해줘", "어떤 위키 있어?", "위키 등록해줘" 같은 요청에 쓴다.
+description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/vaults.toml)에서 맞는 위키(개인 위키 · 읽기 전용으로 등록한 전사 위키)를 골라 그 위키의 AGENTS.md와 yw-wiki-* 스킬로 넘긴다. 위키를 직접 쓰지 않는다. "개인 위키에서 찾아줘", "내 위키 업데이트해줘", "내 위키 갱신해줘", "위키 리뷰해줘", "위키 점검해줘", "어떤 위키 있어?", "위키 등록해줘" 같은 요청에 쓴다.
 ---
 
 # wiki-vault — 위키 길잡이
@@ -14,9 +14,9 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 ## 1. 볼트 고르기
 
 1. `bin/wiki-setting list`로 등록된 볼트(id · 경로 · 이름 · 별칭 · 설명)를 본다. 이름 · 별칭 · 설명은 각 위키의 `wiki.toml` `[wiki]`에서 읽는다.
-2. 고르는 순서: 사용자가 말한 이름 · 별칭("업무 위키", "개인 위키", "work") → 지금 폴더가 볼트 안이면 그 볼트 → 요청 내용과 `description`이 맞는 볼트(회사 업무면 work, 학교 · 개인 프로젝트 · 일지 · 커리어면 personal).
+2. 고르는 순서: 사용자가 말한 이름 · 별칭("개인 위키", "내 위키") → 지금 폴더가 볼트 안이면 그 볼트 → 요청 내용과 `description`이 맞는 볼트.
 3. **찾기(query)는 여러 볼트를 함께 볼 수 있다.** 답마다 어느 볼트인지 밝힌다. **쓰기는 한 볼트에만** 한다. 애매하면 묻는다.
-4. `readonly = true`인 볼트(팀 · 전사 위키)에는 yw-wiki 스킬로 직접 쓰지 않는다. 승격은 업무 위키 규칙(drafts → 사람 검토 → 쓰기 직전 확인)을 거쳐 **그 위키 자신의 규칙과 스킬**(PR이든 main 직행이든)로만 한다.
+4. `readonly = true`인 볼트(팀 · 전사 위키)에는 yw-wiki 스킬로 직접 쓰지 않는다. 그 위키에 쓸 일은 **그 위키 자신의 규칙과 스킬**로만 한다.
 
 ## 2. 경로 찾기
 
@@ -29,7 +29,7 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 | 말 | 스킬 |
 |---|---|
 | 갱신해줘 · sync | `yw-wiki-sync` |
-| 업데이트해줘 · 넣어줘 · 수집해줘 | `yw-wiki-update` |
+| 업데이트해줘 · 넣어줘 | `yw-wiki-update` |
 | 리뷰해줘 · 검토할 것 | `yw-wiki-review` |
 | 찾아줘 · 어디까지 했지 | `yw-wiki-query` |
 | 점검해줘 · lint | `yw-wiki-lint` |
@@ -41,8 +41,7 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 | 목록 · 경로 | `wiki-setting list` · `wiki-setting path <id>` |
 | 점검 | `wiki-setting doctor` (전역 스킬 · 목록 · 경로 · 세팅 버전 · 각 볼트 점검) |
 | 등록 | `wiki-setting register <폴더>` (전사 위키는 `--id company --readonly`) |
-| 새 볼트 | `wiki-setting new-vault --profile personal\|work --path <폴더>` |
+| 새 볼트 | `wiki-setting new-vault --profile personal --path <폴더>` |
 | 세팅 반영 | `wiki-setting upgrade [<id>]` (패치 · 마이너는 바로, 메이저는 확인) |
-| 승격 대상 위치 | `wiki-setting target <id> [--vault work]` (업무 위키 `wiki.toml` `[company.wikis.<id>]`로 찾고 등록, 없으면 `--clone`) |
 
 목록이나 볼트 파일을 바꾸는 명령(register · new-vault · upgrade)은 무엇이 바뀌는지 먼저 보여 주고 확인받는다.

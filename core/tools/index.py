@@ -10,16 +10,16 @@ import sys
 import wikilib
 
 SECTIONS = [("entities", "Entities"), ("concepts", "Concepts"), ("sources", "Sources"),
-            ("synthesis", "Synthesis"), ("decisions", "Decisions"), ("career", "Career"), ("drafts", "Drafts")]
+            ("synthesis", "Synthesis"), ("decisions", "Decisions"), ("career", "Career")]
 
 
 def entry(path, rel):
     meta, body = wikilib.frontmatter(path.read_text())
     meta = meta or {}
     text = meta.get("description") or wikilib.summary(body)
-    status = meta.get("review") if rel.parts[1] == "drafts" else meta.get("status", "")
+    status = meta.get("status", "")
     tag = "" if status in ("active", "", None) else f" `{status}`"
-    return status in ("active", "draft", "approved", "", None), f"- [[{path.stem}]]{tag}" + (f" — {text}" if text else "")
+    return status in ("active", "", None), f"- [[{path.stem}]]{tag}" + (f" — {text}" if text else "")
 
 
 def render(root):

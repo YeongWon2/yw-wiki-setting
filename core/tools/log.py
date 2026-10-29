@@ -3,7 +3,7 @@
 
   python3.14 tools/log.py <작업> <제목> [세부 …]
   예: python3.14 tools/log.py update "2026-10-29 회의" "새 source 1" "갱신 entity 2"
-작업: sync · update · review · query · lint · upgrade · migrate · career · reconcile
+작업: sync · update · review · query · lint · upgrade · migrate · career
 """
 import os
 import sys

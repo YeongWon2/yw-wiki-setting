@@ -10,7 +10,7 @@ from pathlib import Path
 
 SETTING = Path(__file__).resolve().parent.parent
 CORE = SETTING / "core"
-PROFILES = ("personal", "work")
+PROFILES = ("personal",)
 REPO = "YeongWon2/yw-wiki-setting"
 
 
@@ -37,11 +37,8 @@ def wiki_name(dest, profile):
 def readme(conf):
     """위키 README (3초 읽기: 첫 줄 = 무엇인지 → 30초: 말하는 법 · 폴더 → 상세: 새 PC에서 시작)."""
     w = conf.get("wiki", {})
-    work = w.get("profile") == "work"
-    raw = "`raw/worklog/` 업무 일지 · `raw/meetings/` 회의 메모 · `raw/collected/` 수집 요약" if work else \
-        "`raw/daily/` 일지 · `raw/notes/` 메모 · `raw/assets/` 이미지 · PDF"
-    extra = "| `wiki/drafts/` | 팀 · 전사 위키 승격 초안 | Claude (사람 검토 뒤 대상 위키 규칙대로 반영) |\n" if work else \
-        "| `wiki/career/` | 성과 기록 (업무 위키가 회사 내용을 걸러 보냄) | Claude |\n"
+    raw = "`raw/daily/` 일지 · `raw/notes/` 메모 · `raw/assets/` 이미지 · PDF"
+    extra = "| `wiki/career/` | 성과 기록 (회사 내용은 걸러서) | Claude |\n"
     return f"""# {w.get('name', '')}
 
 **{w.get('description', '')}를 Claude가 쓰고 유지하는 LLM 위키다. 질문은 `wiki/index.md`부터 읽는다.**
@@ -64,7 +61,7 @@ def readme(conf):
 
 1. Python 3.14: `brew install python@3.14`
 2. 세팅 받고 길잡이 깔기: `git clone https://github.com/YeongWon2/yw-wiki-setting ~/.local/share/wiki/yw-wiki-setting` → `python3.14 ~/.local/share/wiki/yw-wiki-setting/global/wiki-vault/bin/wiki-setting install`
-3. 이 위키 받고 등록: `git clone <이 저장소> ~/Desktop/wiki/{w.get('id', 'wiki') == 'work' and 'yw-work-wiki' or 'yw-wiki'}` → `wiki-setting register <그 폴더>`
+3. 이 위키 받고 등록: `git clone <이 저장소> ~/Desktop/wiki/yw-wiki` → `wiki-setting register <그 폴더>`
 4. 폴더에서 Claude Code를 열면 세션 시작 때 최신 확인(main · 세팅 · Obsidian 플러그인)이 돈다. Obsidian으로 폴더를 열면 Git 플러그인이 메모를 원격과 맞춘다.
 
 규칙은 `AGENTS.md`, 만든 이유는 세팅의 `docs/철학.md`. 세팅이 관리하는 파일(`_templates/` · `tools/` · `.claude/skills/` · 이 README)은 여기서 고치지 않는다.
