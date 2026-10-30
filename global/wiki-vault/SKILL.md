@@ -13,7 +13,7 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 
 ## 1. 볼트 고르기
 
-1. `bin/wiki-setting list`로 등록된 볼트(id · 경로 · 이름 · 별칭 · 설명)를 본다. 이름 · 별칭 · 설명은 각 위키의 `wiki.toml` `[wiki]`에서 읽는다.
+1. `bin/wiki-setting list`로 등록된 볼트(id · 경로 · 이름 · 별칭 · 설명)를 본다. 이름 · 별칭 · 설명은 각 위키의 `wiki.toml` `[wiki]`에서 읽고, `vaults.toml` 항목에 적혀 있으면 그 값을 먼저 쓴다(`wiki.toml`이 없는 노트 폴더는 `register --name --alias --description`으로 등록).
 2. 고르는 순서: 사용자가 말한 이름 · 별칭("개인 위키", "내 위키") → 지금 폴더가 볼트 안이면 그 볼트 → 요청 내용과 `description`이 맞는 볼트.
 3. **찾기(query)는 여러 볼트를 함께 볼 수 있다.** 답마다 어느 볼트인지 밝힌다. **쓰기는 한 볼트에만** 한다. 애매하면 묻는다.
 4. `readonly = true`인 볼트(팀 · 전사 위키)에는 yw-wiki 스킬로 직접 쓰지 않는다. 그 위키에 쓸 일은 **그 위키 자신의 규칙과 스킬**로만 한다.

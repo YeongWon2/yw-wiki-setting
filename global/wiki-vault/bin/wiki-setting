@@ -3,7 +3,9 @@
 
   wiki-setting install [--from <세팅 폴더>] [--dry-run]   전역 길잡이 스킬을 Claude Code · Codex에 복사, vaults.toml이 없으면 만든다
   wiki-setting list | path <id>                          등록된 볼트와 경로
-  wiki-setting register <폴더> [--id <id>] [--readonly]  볼트 등록 (id는 그 폴더 wiki.toml [wiki] id)
+  wiki-setting register <폴더> [--id <id>] [--readonly] [--name <이름>] [--alias <별칭>]... [--description <설명>]
+                                                         볼트 등록 (id는 그 폴더 wiki.toml [wiki] id). 이름 · 별칭 · 설명을 주면
+                                                         vaults.toml에 두고 wiki.toml 값보다 먼저 쓴다 (wiki.toml이 없는 노트 폴더용)
   wiki-setting new-vault --profile personal --path <폴더>   위키 생성 + 등록 + 첫 점검
   wiki-setting doctor [--fix]                            전역 스킬 · 목록 · 경로 · 세팅 버전 · 각 볼트 점검 (--fix: 옮겨진 볼트 경로 고침)
   wiki-setting upgrade [<id>] [--yes]                    세팅 최신 릴리스 태그를 받아 볼트에 반영 (메이저는 --yes)
@@ -14,6 +16,7 @@
 원격에 접속할 수 없으면 가진 사본으로 계속하고 doctor가 알린다.
 """
 import argparse
+import json
 import os
 import re
 import shutil
@@ -32,6 +35,7 @@ SKILL_DIRS = [HOME / ".claude" / "skills" / "wiki-vault", HOME / ".agents" / "sk
 SEARCH_ROOTS = [HOME / "Desktop" / "wiki", HOME / "vaults", HOME / "Desktop", HOME / "Documents", HOME / "Desktop" / "yw-workspace"]
 DEFAULT_SETTING = HOME / "Desktop" / "wiki" / "yw-wiki-setting"
 PY = sys.executable
+VAULT_META = ("name", "description", "aliases")  # vaults.toml에 두면 wiki.toml [wiki] 값보다 먼저 쓴다
 
 
 def load():
@@ -39,7 +43,7 @@ def load():
 
 
 def dump(conf):
-    lines = ["# 이 PC의 LLM 위키 볼트 목록. wiki-setting이 관리한다. id와 경로만 둔다 (이름 · 별칭은 각 위키 wiki.toml).",
+    lines = ["# 이 PC의 LLM 위키 볼트 목록. wiki-setting이 관리한다. 이름 · 별칭 · 설명은 각 위키 wiki.toml, 여기 적으면 여기 값이 먼저.",
              f"version = {conf.get('version', 1)}"]
     if conf.get("default"):
         lines.append(f'default = "{conf["default"]}"')
@@ -48,6 +52,11 @@ def dump(conf):
         lines += ["", "[setting]"] + [f'{k} = "{v}"' for k, v in s.items()]
     for vid, v in conf.get("vaults", {}).items():
         lines += ["", f"[vaults.{vid}]", f'path = "{v["path"]}"'] + (["readonly = true"] if v.get("readonly") else [])
+        for k in VAULT_META:
+            if v.get(k):
+                val = v[k]
+                lines.append(f"{k} = [{', '.join(json.dumps(x, ensure_ascii=False) for x in val)}]" if isinstance(val, list)
+                             else f"{k} = {json.dumps(val, ensure_ascii=False)}")
     return "\n".join(lines) + "\n"
 
 
@@ -73,6 +82,11 @@ def short(p):
 def wiki_info(path):
     f = path / "wiki.toml"
     return tomllib.loads(f.read_text()).get("wiki", {}) if f.exists() else {}
+
+
+def vault_info(v, path):
+    """wiki.toml [wiki] 위에 vaults.toml 항목의 이름 · 별칭 · 설명을 덮는다."""
+    return {**wiki_info(path), **{k: v[k] for k in VAULT_META if v.get(k)}}
 
 
 def setting_dir(conf):
@@ -129,8 +143,8 @@ def cmd_list(a):
         return 0
     for vid, v in conf["vaults"].items():
         path = expand(v["path"])
-        w = wiki_info(path)
-        mark = "" if path.exists() else "  (폴더 없음 — doctor)"
+        w = vault_info(v, path)
+        mark ="" if path.exists() else "  (폴더 없음 — doctor)"
         ro = " · 읽기 전용" if v.get("readonly") else ""
         print(f"{vid}{' (기본)' if conf.get('default') == vid else ''}: {short(path)}{ro}{mark}")
         if w:
@@ -153,7 +167,9 @@ def cmd_register(a):
     if not vid:
         sys.exit(f"{short(path)}에 wiki.toml [wiki] id가 없다 — --id로 정한다")
     conf = load()
-    conf.setdefault("vaults", {})[vid] = {"path": short(path), **({"readonly": True} if a.readonly else {})}
+    meta = {"name": a.name, "description": a.description, "aliases": a.alias}
+    conf.setdefault("vaults", {})[vid] = {"path": short(path), **({"readonly": True} if a.readonly else {}),
+                                          **{k: val for k, val in meta.items() if val}}
     conf.setdefault("default", vid if vid == "personal" else conf.get("default", vid))
     save(conf, a.dry_run)
     return 0
@@ -208,7 +224,7 @@ def cmd_doctor(a):
                     f"후보 {', '.join(map(short, hits))} — wiki-setting doctor --fix" if len(hits) == 1
                     else (f"후보 여럿: {', '.join(map(short, hits))} — 사람이 고른다" if hits else "wiki-setting register <폴더>"))
                 continue
-        w = wiki_info(path)
+        w = vault_info(v, path)
         say(w.get("id", vid) == vid, f"{vid}: {short(path)} ({w.get('name', '이름 없음')})", "wiki.toml [wiki] id가 목록과 다르다")
         if v.get("readonly"):
             continue
@@ -347,6 +363,7 @@ def main():
     sub.add_parser("list")
     s = sub.add_parser("path"); s.add_argument("id")
     s = sub.add_parser("register"); s.add_argument("folder"); s.add_argument("--id"); s.add_argument("--readonly", action="store_true"); s.add_argument("--dry-run", action="store_true")
+    s.add_argument("--name"); s.add_argument("--alias", action="append"); s.add_argument("--description")
     s = sub.add_parser("new-vault"); s.add_argument("--profile", required=True, choices=["personal"]); s.add_argument("--path", required=True); s.add_argument("--dry-run", action="store_true")
     s = sub.add_parser("doctor"); s.add_argument("--fix", action="store_true")
     s = sub.add_parser("upgrade"); s.add_argument("id", nargs="?"); s.add_argument("--yes", action="store_true")
