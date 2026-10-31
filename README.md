@@ -34,11 +34,12 @@ wiki-setting register <위키 폴더>        # 받아 둔 위키마다
 | 세팅 바꾼 뒤 점검 | `sh check.sh` (단위 시험) → `sh e2e.sh <개인 위키>` (실제 위키 복사본으로 사용 시나리오) → `python3.14 scripts/audit_links.py <위키들> . --online` (링크 · 낡은 표현). 모두 통과한 커밋에만 `vX.Y.Z` 태그 |
 | 이 PC에 길잡이 스킬 깔기 | `python3.14 global/wiki-vault/bin/wiki-setting install` → `register <위키 폴더>` (볼트 목록 `~/.config/wiki/vaults.toml`) |
 
-## 위키 안에서 말하기 (스킬 5개)
+## 위키 안에서 말하기 (스킬 6개)
 
 | 말 | 스킬 | 하는 일 |
 |---|---|---|
 | 갱신해줘 | `yw-wiki-sync` | 최신 받기 · 세팅 반영 · 할 일 알리기 |
+| 완전 최신화해줘 | `yw-wiki-refresh` | main으로 맞추고 다른 브랜치 지우기 (합쳐지지 않은 것은 묻고) |
 | 업데이트해줘 | `yw-wiki-update` | 원본을 위키에 반영. 충돌은 `review/`로 |
 | 리뷰해줘 | `yw-wiki-review` | 검토 대기를 보여 주고 정한 것만 반영 |
 | 찾아줘 | `yw-wiki-query` | 목차부터 읽고 근거 링크로 답함 |

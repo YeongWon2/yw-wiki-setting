@@ -46,11 +46,12 @@ review/           사람 검토 대기열. 위키에 넣지 않은 충돌 · 미
 - `review/` 항목은 사람이 `yw-wiki-review`로 정해야만 위키에 들어간다. 사람과 대화 중이면 작업 끝에 바로 리뷰를 권한다. query는 `review/`를 근거로 쓰지 않는다.
 - 표와 mermaid는 내용을 담을 때만 쓴다. 장식(hero callout · 열 배치 · 이모지 제목 · 전용 CSS)은 쓰지 않는다.
 
-## 3. 작업 5가지 (스킬)
+## 3. 작업 6가지 (스킬)
 
 | 작업 | 스킬 | 하는 일 |
 |---|---|---|
 | 갱신 | `yw-wiki-sync` | 원격 최신 받기 · 세팅 새 버전 반영 · 아직 반영 안 된 raw와 검토 대기 알리기. 위키 내용은 쓰지 않는다 |
+| 완전 최신화 | `yw-wiki-refresh` | main으로 돌아와 원격 main · 세팅 최신으로 맞추고 다른 브랜치(로컬 · 원격)를 지운다. main에 합쳐지지 않은 브랜치는 물은 뒤에만 지운다 |
 | 업데이트 | `yw-wiki-update` | 원본을 읽고 source 요약 → 관련 entity · concept · decision 갱신 → 이웃 페이지의 Connections · 요약 갱신 → index · log |
 | 검토 | `yw-wiki-review` | `review/`의 항목을 사람에게 보여 주고 정한 것만 위키에 반영 |
 | 찾기 | `yw-wiki-query` | index → 관련 entity · synthesis → 세부 페이지 순으로 읽고 근거 링크로 답한다. 다시 쓸 만한 답은 synthesis로 저장 |

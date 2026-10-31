@@ -1,6 +1,6 @@
 ---
 name: wiki-vault
-description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/vaults.toml)에서 맞는 위키(개인 위키 · 읽기 전용으로 등록한 전사 위키)를 골라 그 위키의 AGENTS.md와 yw-wiki-* 스킬로 넘긴다. 위키를 직접 쓰지 않는다. "개인 위키에서 찾아줘", "내 위키 업데이트해줘", "내 위키 갱신해줘", "위키 리뷰해줘", "위키 점검해줘", "어떤 위키 있어?", "위키 등록해줘" 같은 요청에 쓴다.
+description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/vaults.toml)에서 맞는 위키(개인 위키 · 읽기 전용으로 등록한 전사 위키)를 골라 그 위키의 AGENTS.md와 yw-wiki-* 스킬로 넘긴다. 위키를 직접 쓰지 않는다. "개인 위키에서 찾아줘", "내 위키 업데이트해줘", "내 위키 갱신해줘", "내 위키 완전 최신화해줘", "위키 리뷰해줘", "위키 점검해줘", "어떤 위키 있어?", "위키 등록해줘" 같은 요청에 쓴다.
 ---
 
 # wiki-vault — 위키 길잡이
@@ -29,6 +29,7 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 | 말 | 스킬 |
 |---|---|
 | 갱신해줘 · sync | `yw-wiki-sync` |
+| 완전 최신화 · main 기준으로 맞춰줘 · 브랜치 정리 | `yw-wiki-refresh` |
 | 업데이트해줘 · 넣어줘 | `yw-wiki-update` |
 | 리뷰해줘 · 검토할 것 | `yw-wiki-review` |
 | 찾아줘 · 어디까지 했지 | `yw-wiki-query` |
