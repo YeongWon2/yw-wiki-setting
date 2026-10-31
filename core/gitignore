@@ -14,6 +14,8 @@
 .obsidian/plugins/*/main.js
 .obsidian/plugins/*/styles.css
 .obsidian/plugins/*/manifest.json
+# Obsidian Git 플러그인이 켜질 때 만드는 로그인 도우미 (기기마다 다름)
+.obsidian/plugins/obsidian-git/obsidian_askpass.sh
 
 # ── 로컬 전용 ──
 CLAUDE.local.md
