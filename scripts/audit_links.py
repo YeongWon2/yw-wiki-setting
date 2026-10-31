@@ -41,7 +41,9 @@ def gh_exists(owner, repo, kind, ref, cache):
     key = (owner, repo, kind, ref)
     if key in cache:
         return cache[key]
-    if kind in ("pull", "issues"):
+    if kind in ("pull", "issues") and not ref.split("/")[0].isdigit():
+        api = f"repos/{owner}/{repo}"  # issues/new/choose 같은 화면 링크는 저장소만 본다
+    elif kind in ("pull", "issues"):
         api = f"repos/{owner}/{repo}/issues/{ref.split('/')[0]}"
     elif kind == "commit":
         api = f"repos/{owner}/{repo}/commits/{ref.split('/')[0]}"
