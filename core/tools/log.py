@@ -24,8 +24,9 @@ def append(root, action, title, details=()):
 
 def main():
     args = sys.argv[1:]
-    if args and os.path.isdir(os.path.expanduser(args[0])):
-        root, args = wikilib.Path(args[0]).expanduser().resolve(), args[1:]
+    root = wikilib.wiki_root_arg(args[0]) if args else None
+    if root:
+        args = args[1:]
     else:
         root = wikilib.ROOT
     if len(args) < 2:

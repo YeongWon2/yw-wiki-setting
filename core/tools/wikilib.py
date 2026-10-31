@@ -18,10 +18,16 @@ TYPE_DIRS = {"entity": "entities", "concept": "concepts", "source": "sources", "
 LINK = re.compile(r"\[\[([^\]|#^]+)")
 
 
+def wiki_root_arg(arg):
+    """인자가 위키 루트(wiki.toml이 있는 폴더)면 그 경로를, 아니면 None. 같은 이름 폴더(review 등)는 루트가 아니다."""
+    path = Path(arg).expanduser()
+    return path.resolve() if (path / "wiki.toml").is_file() else None
+
+
 def root_from_argv():
-    """첫 인자가 경로면 그 위키를, 아니면 이 tools/가 있는 위키를 본다."""
+    """첫 인자가 위키 루트면 그 위키를, 아니면 이 tools/가 있는 위키를 본다."""
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
-    return Path(args[0]).expanduser().resolve() if args and Path(args[0]).is_dir() else ROOT
+    return (wiki_root_arg(args[0]) if args else None) or ROOT
 
 
 def config(root):

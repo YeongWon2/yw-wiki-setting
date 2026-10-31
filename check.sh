@@ -26,6 +26,9 @@ for p in personal; do
   done
   git -C "$W" check-ignore -q .obsidian/plugins/obsidian-git/data.json && fail "$p 플러그인 설정 data.json까지 무시함"
   [ -f "$W/.obsidian/graph.json" ] && [ -f "$W/.obsidian/plugins/obsidian-git/data.json" ] || fail "$p Obsidian 기본값 안 깔림"
+  # 위키 루트에서 작업 이름이 같은 이름 폴더(review/)와 겹쳐도 log는 wiki/log.md에 쓴다
+  (cd "$W" && "$PY" tools/log.py review "폴더 이름 작업" "정함 0" >/dev/null) || fail "$p log.py가 작업 이름 review를 경로로 읽음"
+  grep -q "review | 폴더 이름 작업" "$W/wiki/log.md" || fail "$p log.py review 기록 없음"
   "$PY" "$W/tools/version.py" "$W" --hook | grep -q "main" || fail "$p version.py (main 확인)"
 
   # 템플릿으로 만든 페이지 하나와 그걸 가리키는 페이지 하나가 통과해야 한다
