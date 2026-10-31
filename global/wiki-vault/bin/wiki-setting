@@ -62,6 +62,10 @@ def dump(conf):
         lines += ["", f"[vaults.{vid}]", f'path = "{v["path"]}"'] + (["readonly = true"] if v.get("readonly") else [])
         if v.get("obsidian_id"):  # 이 PC의 Obsidian 볼트 id. 위키 폴더가 옮겨져도 같은 볼트를 따라간다
             lines.append(f'obsidian_id = "{v["obsidian_id"]}"')
+        if v.get("obsidian_depth"):  # Obsidian 볼트가 위키의 몇 단계 위 폴더인가
+            lines.append(f'obsidian_depth = {v["obsidian_depth"]}')
+        if v.get("previous_path"):  # 경로를 고치기 전 위치. Obsidian 볼트를 맞추면 지운다
+            lines.append(f'previous_path = "{v["previous_path"]}"')
         for k in VAULT_META:
             if v.get(k):
                 val = v[k]
@@ -162,50 +166,74 @@ def obsidian_open():
     return sys.platform == "darwin" and subprocess.run(["open", "-a", "Obsidian"], capture_output=True).returncode == 0
 
 
-def obsidian_vaults(conf, fix, prune=False, hints=None):
+def obsidian_vaults(conf, fix, prune=False):
     """위키마다 Obsidian 볼트를 찾아 경로를 맞춘다. (메모 목록, 문제 여부, vaults.toml을 고쳤나)
-    찾는 순서: 기록한 obsidian_id → 같은 경로 → 상위 폴더 볼트(그대로 둠) → 폴더가 없어진 볼트 중
-    이름이 같거나 hints(doctor가 고치기 전 경로)와 같은 것 하나."""
+    찾는 순서: 기록한 obsidian_id → 같은 경로 → 위키를 품은 상위 폴더 볼트 → 폴더가 없어진 볼트 중
+    previous_path(목록이 고치기 전 경로)를 품었거나 이름이 같은 것 하나.
+    상위 폴더 볼트는 몇 단계 위인지(obsidian_depth)를 기록해, 위키와 상위 폴더가 함께 옮겨지거나 이름이 바뀌어도 따라간다."""
     oj = obsidian_json()
     if not oj.exists():
         return ["Obsidian 볼트 목록 없음 — 건너뜀"], False, False
     data = json.loads(oj.read_text())
     ovs = data.setdefault("vaults", {})
-    gone = lambda o: not Path(o["path"]).exists()
+    opath = lambda i: Path(ovs[i]["path"]).resolve()  # /var ↔ /private/var 같은 별칭을 맞춘다
     notes, bad, conf_changed, moves, used = [], False, False, [], set()
     for vid, v in conf.get("vaults", {}).items():
         path = expand(v["path"])
         if not path.exists():
             continue
+        old = expand(v["previous_path"]) if v.get("previous_path") else None
         oid = v.get("obsidian_id") if v.get("obsidian_id") in ovs else None
-        oid = oid or next((i for i, o in ovs.items() if Path(o["path"]) == path), None)
+        depth = v.get("obsidian_depth", 0) if oid else 0
         if not oid:
-            cover = next((i for i, o in ovs.items() if path.is_relative_to(Path(o["path"]))), None)
-            if cover:
-                used.add(cover)
-                notes.append(f"{vid}: Obsidian은 상위 폴더 볼트 {short(ovs[cover]['path'])}로 엶")
-                continue
-            old = (hints or {}).get(vid)
-            cands = [i for i, o in ovs.items() if gone(o) and (Path(o["path"]).name == path.name or Path(o["path"]) == old)]
+            oid = next((i for i in ovs if opath(i) == path), None)
+        if not oid:
+            oid = next((i for i in ovs if path.is_relative_to(opath(i))), None)
+            depth = len(path.relative_to(opath(oid)).parts) if oid else 0
+        if not oid:
+            cands = []
+            for i in ovs:
+                if opath(i).exists():
+                    continue
+                if old and old.is_relative_to(opath(i)):
+                    cands.append((i, len(old.relative_to(opath(i)).parts)))
+                elif opath(i).name == path.name:
+                    cands.append((i, 0))
             if len(cands) != 1:
-                notes.append(f"{vid}: Obsidian 볼트 없음" + (f" — 후보 여럿({', '.join(short(ovs[i]['path']) for i in cands)}), 사람이 고른다"
+                notes.append(f"{vid}: Obsidian 볼트 없음" + (f" — 후보 여럿({', '.join(short(ovs[i]['path']) for i, _ in cands)}), 사람이 고른다"
                                                              if cands else " — Obsidian에서 이 폴더를 볼트로 열면 등록된다"))
                 continue
-            oid = cands[0]
+            oid, depth = cands[0]
+        if depth >= len(path.parts):
+            notes.append(f"{vid}: Obsidian 볼트 {short(ovs[oid]['path'])}를 이 위키에 맞출 수 없음 — 사람이 고른다")
+            bad = True
+            continue
         used.add(oid)
-        if v.get("obsidian_id") != oid:
+        if (v.get("obsidian_id"), v.get("obsidian_depth", 0)) != (oid, depth):
             v["obsidian_id"], conf_changed = oid, True
-        if Path(ovs[oid]["path"]) != path:
-            moves.append((vid, oid, ovs[oid]["path"], str(path)))
-    stale = [i for i, o in ovs.items() if i not in used and gone(o)]
+            if depth:
+                v["obsidian_depth"] = depth
+            else:
+                v.pop("obsidian_depth", None)
+        target = path.parents[depth - 1] if depth else path
+        if opath(oid) != target:
+            moves.append((vid, oid, ovs[oid]["path"], str(target)))
+        else:
+            if depth:
+                notes.append(f"{vid}: Obsidian은 상위 폴더 볼트 {short(ovs[oid]['path'])}로 엶")
+            if v.pop("previous_path", None):
+                conf_changed = True
+    stale = [i for i in ovs if i not in used and not opath(i).exists()]
     todo = moves + (stale if prune else [])
     if todo and fix and obsidian_running():
         notes.append("Obsidian이 켜져 있어 볼트 목록을 고치지 않음 — 사람에게 끌지 묻고 --restart로 다시")
         return notes, True, conf_changed
-    for vid, oid, old, new in moves:
+    for vid, oid, old_p, new_p in moves:
         if fix:
-            ovs[oid]["path"] = new
-        notes.append(f"{vid}: Obsidian 볼트 {short(old)} → {short(new)}" + ("" if fix else " (옮길 것 — --fix)"))
+            ovs[oid]["path"] = new_p
+            if conf["vaults"][vid].pop("previous_path", None):
+                conf_changed = True
+        notes.append(f"{vid}: Obsidian 볼트 {short(old_p)} → {short(new_p)}" + ("" if fix else " (옮길 것 — --fix)"))
         bad |= not fix
     for oid in stale:
         notes.append(f"폴더가 없는 Obsidian 볼트 {short(ovs[oid]['path'])}" + (" 지움" if fix and prune else " (지우려면 --fix --prune)"))
@@ -333,8 +361,12 @@ def cmd_register(a):
         sys.exit(f"{short(path)}에 wiki.toml [wiki] id가 없다 — --id로 정한다")
     conf = load()
     meta = {"name": a.name, "description": a.description, "aliases": a.alias}
+    prev = conf.get("vaults", {}).get(vid, {})
+    keep = {k: prev[k] for k in ("obsidian_id", "obsidian_depth") if prev.get(k)}  # 다시 등록해도 Obsidian 볼트를 잇는다
+    if prev.get("path") and expand(prev["path"]) != path:
+        keep["previous_path"] = prev.get("previous_path") or prev["path"]
     conf.setdefault("vaults", {})[vid] = {"path": short(path), **({"readonly": True} if a.readonly else {}),
-                                          **{k: val for k, val in meta.items() if val}}
+                                          **{k: val for k, val in meta.items() if val}, **keep}
     conf.setdefault("default", vid if vid == "personal" else conf.get("default", vid))
     save(conf, a.dry_run)
     return 0
@@ -376,13 +408,13 @@ def cmd_doctor(a):
     if (sdir / ".git").exists():
         tag, note = latest_tag(sdir)
         print(f"  세팅 v{sver}" + (f" · 최신 릴리스 {tag}" if tag else "") + (f" · {note}" if note else ""))
-    changed, hints = False, {}
+    changed = False
     for vid, v in conf.get("vaults", {}).items():
         path = expand(v["path"])
         if not path.exists():
             hits = find_moved(vid)
             if len(hits) == 1 and a.fix:
-                hints[vid] = path
+                v["previous_path"] = v["path"]
                 v["path"], path, changed = short(hits[0]), hits[0], True
                 print(f"! {vid}: 경로를 {short(hits[0])}로 고침")
             else:
@@ -401,7 +433,7 @@ def cmd_doctor(a):
         r = subprocess.run([PY, str(path / "tools" / "check.py"), str(path)], capture_output=True, text=True)
         last = (r.stdout.strip().splitlines() or [r.stderr.strip()])[-1]
         say(r.returncode == 0, f"  점검: {last}", f"{short(path)}에서 '점검해줘'")
-    onotes, obad, ochanged = obsidian_vaults(conf, a.fix, hints=hints)  # 옮긴 위키는 Obsidian 볼트도 따라간다
+    onotes, obad, ochanged = obsidian_vaults(conf, a.fix)  # 옮긴 위키는 Obsidian 볼트도 따라간다
     for n in onotes:
         print(f"  Obsidian: {n}")
     bad += obad

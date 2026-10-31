@@ -119,6 +119,17 @@ YW_OBSIDIAN_RUNNING=1 "$PY" "$WS" obsidian --fix --prune --restart > "$TMP/obs" 
 grep -q "껐다가 다시 켬" "$TMP/obs" || fail "--restart가 Obsidian을 끄고 다시 켜지 않음"
 grep -q '"bbbb"' "$OJ" && fail "--prune이 폴더 없는 볼트를 안 지움"
 mv "$P1" "$TMP/personal" && "$PY" "$WS" register "$TMP/personal" >/dev/null
+# 상위 폴더 볼트: Obsidian은 위키를 품은 폴더를 열고, 그 폴더와 위키 이름이 함께 바뀌어도 따라간다
+mkdir -p "$TMP/hub" && mv "$TMP/personal" "$TMP/hub/w" && "$PY" "$WS" register "$TMP/hub/w" >/dev/null
+printf '{"vaults":{"cccc":{"path":"%s/hub","ts":1}}}' "$TMP" > "$OJ"
+"$PY" "$WS" obsidian | grep -q "상위 폴더 볼트" || fail "상위 폴더 볼트를 못 봄"
+grep -q 'obsidian_depth = 1' "$HOME/.config/wiki/vaults.toml" || fail "상위 폴더 볼트 단계를 기록 안 함"
+mv "$TMP/hub" "$TMP/hub2" && mv "$TMP/hub2/w" "$TMP/hub2/w2" && "$PY" "$WS" register "$TMP/hub2/w2" >/dev/null
+grep -q 'previous_path' "$HOME/.config/wiki/vaults.toml" || fail "다시 등록할 때 이전 경로를 안 남김"
+YW_OBSIDIAN_RUNNING=0 "$PY" "$WS" obsidian --fix > "$TMP/obs" || { cat "$TMP/obs"; fail "상위 폴더 볼트 옮기기 실패"; }
+grep -q 'hub2"' "$OJ" || { cat "$TMP/obs"; fail "상위 폴더 볼트가 바뀐 폴더를 따라가지 않음"; }
+grep -q 'previous_path' "$HOME/.config/wiki/vaults.toml" && fail "옮긴 뒤 이전 경로가 남음"
+mv "$TMP/hub2/w2" "$TMP/personal" && "$PY" "$WS" register "$TMP/personal" >/dev/null
 echo "0.0.1" > "$HOME/.claude/skills/wiki-vault/VERSION"
 "$PY" "$WS" check >/dev/null 2>&1 || true  # 오프라인 시험이라 ⚠(1)가 정상
 [ "$(cat "$HOME/.claude/skills/wiki-vault/VERSION")" = "$(cat "$SETTING/VERSION")" ] || fail "check가 낡은 전역 스킬을 다시 깔지 않음"
