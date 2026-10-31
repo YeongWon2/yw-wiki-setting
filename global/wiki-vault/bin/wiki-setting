@@ -11,9 +11,11 @@
   wiki-setting upgrade [<id>] [--yes]                    세팅 최신 릴리스 태그를 받아 볼트에 반영 (메이저는 --yes)
   wiki-setting check [--vault <폴더>]                    최신 확인: 세팅 사본 → main의 최신 릴리스 태그, 전역 스킬 버전,
                                                          볼트 세팅 버전(패치 · 마이너는 반영 · 커밋, 메이저는 알림), 볼트 main 기준
-  wiki-setting obsidian [--fix] [--prune]                Obsidian 볼트 목록을 위키 경로에 맞춘다: 옮기거나 이름을 바꾼 위키의 볼트 경로,
+  wiki-setting obsidian [--fix] [--prune] [--restart]    Obsidian 볼트 목록을 위키 경로에 맞춘다: 옮기거나 이름을 바꾼 위키의 볼트 경로,
                                                          없어진 폴더를 가리키는 볼트 설정(새 노트 · 첨부 · 템플릿 · 일지 폴더).
-                                                         --fix로 고친다(Obsidian이 꺼져 있을 때만). --prune: 폴더가 없는 볼트 항목을 지운다
+                                                         --fix로 고친다(Obsidian이 꺼져 있을 때만). --prune: 폴더가 없는 볼트 항목을 지운다.
+                                                         --restart: 고칠 것이 있으면 켜진 Obsidian을 정상 종료 → 고침 → 다시 켬
+                                                         (사람에게 "Obsidian을 끌까요?" 물은 뒤에만 쓴다)
 
 세팅(yw-wiki-setting)은 vaults.toml [setting] path의 git 사본을 쓴다. 원격이 있으면 main이 아니라 최신 릴리스 태그(vX.Y.Z)를 받는다.
 원격에 접속할 수 없으면 가진 사본으로 계속하고 doctor가 알린다.
@@ -25,6 +27,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 if sys.version_info < (3, 14):
@@ -138,6 +141,27 @@ def obsidian_running():
         return False
 
 
+def obsidian_quit():
+    """켜진 Obsidian을 정상 종료하고 꺼질 때까지 기다린다(macOS). 시험에서는 YW_OBSIDIAN_RUNNING을 0으로 바꾼다."""
+    if os.environ.get("YW_OBSIDIAN_RUNNING") == "1":
+        os.environ["YW_OBSIDIAN_RUNNING"] = "0"
+        return True
+    if sys.platform != "darwin":
+        return False
+    subprocess.run(["osascript", "-e", 'quit app "Obsidian"'], capture_output=True)
+    for _ in range(40):
+        if not obsidian_running():
+            return True
+        time.sleep(0.5)
+    return False
+
+
+def obsidian_open():
+    if "YW_OBSIDIAN_RUNNING" in os.environ:  # 시험
+        return True
+    return sys.platform == "darwin" and subprocess.run(["open", "-a", "Obsidian"], capture_output=True).returncode == 0
+
+
 def obsidian_vaults(conf, fix, prune=False, hints=None):
     """위키마다 Obsidian 볼트를 찾아 경로를 맞춘다. (메모 목록, 문제 여부, vaults.toml을 고쳤나)
     찾는 순서: 기록한 obsidian_id → 같은 경로 → 상위 폴더 볼트(그대로 둠) → 폴더가 없어진 볼트 중
@@ -176,7 +200,7 @@ def obsidian_vaults(conf, fix, prune=False, hints=None):
     stale = [i for i, o in ovs.items() if i not in used and gone(o)]
     todo = moves + (stale if prune else [])
     if todo and fix and obsidian_running():
-        notes.append("Obsidian이 켜져 있어 볼트 목록을 고치지 않음 — Obsidian을 끈 뒤 다시")
+        notes.append("Obsidian이 켜져 있어 볼트 목록을 고치지 않음 — 사람에게 끌지 묻고 --restart로 다시")
         return notes, True, conf_changed
     for vid, oid, old, new in moves:
         if fix:
@@ -185,6 +209,7 @@ def obsidian_vaults(conf, fix, prune=False, hints=None):
         bad |= not fix
     for oid in stale:
         notes.append(f"폴더가 없는 Obsidian 볼트 {short(ovs[oid]['path'])}" + (" 지움" if fix and prune else " (지우려면 --fix --prune)"))
+        bad |= prune and not fix
         if fix and prune:
             del ovs[oid]
     if fix and todo:
@@ -223,15 +248,28 @@ def obsidian_folders(conf, sdir, fix):
                 else:
                     notes.append(f"{vid}: Obsidian {name} {k}가 없는 폴더 {cur}를 가리킴 — 사람이 정한다")
                     bad = True
-            if changed:
+            if changed and obsidian_running():
+                notes.append(f"{vid}: Obsidian이 켜져 있어 {name}을 고치지 않음 — 사람에게 끌지 묻고 --restart로 다시")
+                bad = True
+            elif changed:
                 f.write_text(json.dumps(conf_o, ensure_ascii=False, indent=2) + "\n")
     return notes, bad
 
 
 def cmd_obsidian(a):
     conf = load()
+    sdir, reopen = setting_dir(conf), False
+    if a.fix and a.restart and obsidian_running():
+        # 고칠 것이 있을 때만 끈다. 끌 때 Obsidian이 쓴 목록을 아래에서 다시 읽는다
+        if obsidian_vaults(load(), False, a.prune)[1] or obsidian_folders(conf, sdir, False)[1]:
+            if not obsidian_quit():
+                print("⚠ Obsidian을 끄지 못함 — 직접 끈 뒤 다시")
+                return 1
+            reopen = True
     notes, bad, conf_changed = obsidian_vaults(conf, a.fix, a.prune)
-    n2, b2 = obsidian_folders(conf, setting_dir(conf), a.fix)
+    n2, b2 = obsidian_folders(conf, sdir, a.fix)
+    if reopen:
+        n2.append("Obsidian을 껐다가 다시 켬" if obsidian_open() else "Obsidian을 껐음 — 다시 켜지 못함, 직접 켠다")
     if conf_changed:
         save(conf, False)
     for n in notes + n2:
@@ -500,7 +538,7 @@ def main():
     s = sub.add_parser("doctor"); s.add_argument("--fix", action="store_true")
     s = sub.add_parser("upgrade"); s.add_argument("id", nargs="?"); s.add_argument("--yes", action="store_true")
     s = sub.add_parser("check"); s.add_argument("--vault")
-    s = sub.add_parser("obsidian"); s.add_argument("--fix", action="store_true"); s.add_argument("--prune", action="store_true")
+    s = sub.add_parser("obsidian"); s.add_argument("--fix", action="store_true"); s.add_argument("--prune", action="store_true"); s.add_argument("--restart", action="store_true")
     a = p.parse_args()
     return {"install": cmd_install, "list": cmd_list, "path": cmd_path, "register": cmd_register,
             "new-vault": cmd_new_vault, "doctor": cmd_doctor, "upgrade": cmd_upgrade, "check": cmd_check,

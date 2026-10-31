@@ -47,6 +47,6 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 | 등록 | `wiki-setting register <폴더>` (전사 위키는 `--id company --readonly`) |
 | 새 볼트 | `wiki-setting new-vault --profile personal --path <폴더>` |
 | 세팅 반영 | `wiki-setting upgrade [<id>]` (패치 · 마이너는 바로, 메이저는 확인) |
-| Obsidian 볼트 맞추기 | `wiki-setting obsidian [--fix] [--prune]` (옮긴 위키 폴더에 Obsidian 볼트 경로 · 폴더 설정을 맞춤. Obsidian을 끈 뒤) |
+| Obsidian 볼트 맞추기 | `wiki-setting obsidian [--fix] [--prune] [--restart]` (옮긴 위키 폴더에 Obsidian 볼트 경로 · 폴더 설정을 맞춤. Obsidian이 켜져 있으면 "Obsidian을 끌까요?" 묻고 예일 때만 `--restart`) |
 
 목록이나 볼트 파일을 바꾸는 명령(register · new-vault · upgrade)은 무엇이 바뀌는지 먼저 보여 주고 확인받는다.

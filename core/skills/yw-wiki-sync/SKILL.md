@@ -17,8 +17,9 @@ description: "[{{wiki_name}}] 위키를 main 기준으로 완전히 동기화한
    - 다른 worktree가 쓰고 있는 브랜치는 건너뛰고 그 경로를 알린다. 끝에 `git worktree prune`.
 5. **폴더 위치 · Obsidian:**
    - `wiki-setting doctor --fix` — 볼트 목록(`~/.config/wiki/vaults.toml`)의 경로가 옮겨졌거나 이름이 바뀐 위키 폴더를 따라가게 고친다. 후보가 여럿이면 사람이 고른다.
-   - `wiki-setting obsidian --fix` — Obsidian 볼트 목록이 지금 위키 폴더를 가리키게 옮기고, 볼트 설정(새 노트 · 첨부 · 템플릿 · 일지 폴더)이 없어진 폴더를 가리키면 세팅 값으로 맞춘다. Obsidian이 켜져 있으면 고치지 않으니 끄라고 말하고 다시 돌린다.
-   - 폴더가 없는 Obsidian 볼트 항목이 나오면 보여 주고, 지우라고 하면 `wiki-setting obsidian --fix --prune`.
+   - `wiki-setting obsidian --fix` — Obsidian 볼트 목록이 지금 위키 폴더를 가리키게 옮기고, 볼트 설정(새 노트 · 첨부 · 템플릿 · 일지 폴더)이 없어진 폴더를 가리키면 세팅 값으로 맞춘다.
+   - 폴더가 없는 Obsidian 볼트 항목이 나오면 보여 주고 지울지 묻는다. 지우라고 하면 `--prune`을 붙인다.
+   - **Obsidian이 켜져 있어 고치지 못하면 사람에게 묻는다: "Obsidian을 잠깐 꺼야 고칠 수 있습니다. 끌까요?"** (질문 도구가 있으면 선택지로). 예면 같은 명령에 `--restart`를 붙인다(정상 종료 → 고침 → 다시 켬). 아니오면 고치지 않은 것을 보고에 남긴다. 묻지 않고 끄지 않는다.
 6. **확인:** `git branch -a`에 main · origin/main(· origin/HEAD)만 있는지, `git status -sb` 첫 줄이 `## main...origin/main`인지, `python3.14 tools/version.py`에 ⚠가 없는지, `wiki-setting obsidian`이 "Obsidian 맞음"인지.
 7. **알리기:**
    - 반영 안 된 raw: `raw/` 파일 중 어느 source의 `sources`에도 없는 것 → "업데이트할 것 N개" (그 목록).

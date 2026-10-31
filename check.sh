@@ -113,7 +113,10 @@ grep -q "renamed-personal" "$OJ" || { cat "$TMP/doctor"; fail "옮긴 위키를 
 sed -i.bak 's#"raw/assets"#"첨부"#' "$P1/.obsidian/app.json" && rm "$P1/.obsidian/app.json.bak"
 YW_OBSIDIAN_RUNNING=0 "$PY" "$WS" obsidian --fix | grep -q "attachmentFolderPath 첨부 → raw/assets" || fail "없는 폴더 설정을 세팅 값으로 안 고침"
 grep -q '"raw/assets"' "$P1/.obsidian/app.json" || fail "app.json 고침이 안 남음"
-YW_OBSIDIAN_RUNNING=0 "$PY" "$WS" obsidian --fix --prune >/dev/null
+YW_OBSIDIAN_RUNNING=1 "$PY" "$WS" obsidian --fix --prune >/dev/null && fail "Obsidian이 켜져 있는데 지웠다고 함"
+grep -q '"bbbb"' "$OJ" || fail "Obsidian이 켜져 있는데 obsidian.json을 고침"
+YW_OBSIDIAN_RUNNING=1 "$PY" "$WS" obsidian --fix --prune --restart > "$TMP/obs" || { cat "$TMP/obs"; fail "--restart 실패"; }
+grep -q "껐다가 다시 켬" "$TMP/obs" || fail "--restart가 Obsidian을 끄고 다시 켜지 않음"
 grep -q '"bbbb"' "$OJ" && fail "--prune이 폴더 없는 볼트를 안 지움"
 mv "$P1" "$TMP/personal" && "$PY" "$WS" register "$TMP/personal" >/dev/null
 echo "0.0.1" > "$HOME/.claude/skills/wiki-vault/VERSION"

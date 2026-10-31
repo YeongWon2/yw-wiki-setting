@@ -17,7 +17,8 @@ description: "[yw-wiki-setting] 이 세팅 저장소를 main 기준으로 완전
 4. **이 PC 맞추기:**
    - `wiki-setting check` — 세팅 사본을 main의 최신 릴리스 태그로, 낡은 길잡이 스킬은 다시 깐다. ⚠가 나오면 그대로 알린다.
    - `wiki-setting doctor --fix` — 옮겨졌거나 이름이 바뀐 위키 폴더를 볼트 목록이 따라가게 고친다. 후보가 여럿이면 사람이 고른다.
-   - `wiki-setting obsidian --fix` — Obsidian 볼트 목록 · 볼트 폴더 설정을 지금 위키 폴더에 맞춘다. Obsidian이 켜져 있으면 끄라고 말하고 다시 돌린다. 폴더가 없는 Obsidian 볼트 항목은 보여 주고, 지우라고 하면 `--fix --prune`.
+   - `wiki-setting obsidian --fix` — Obsidian 볼트 목록 · 볼트 폴더 설정을 지금 위키 폴더에 맞춘다. 폴더가 없는 Obsidian 볼트 항목은 보여 주고 지울지 묻는다. 지우라고 하면 `--prune`을 붙인다.
+   - **Obsidian이 켜져 있어 고치지 못하면 사람에게 묻는다: "Obsidian을 잠깐 꺼야 고칠 수 있습니다. 끌까요?"** 예면 같은 명령에 `--restart`를 붙인다(정상 종료 → 고침 → 다시 켬). 아니오면 고치지 않은 것을 보고에 남긴다. 묻지 않고 끄지 않는다.
 5. **확인:** `git branch -a`에 main · origin/main(· origin/HEAD)만 있는지, `git status -sb` 첫 줄이 `## main...origin/main`인지, `VERSION`과 최신 태그(`git describe --tags --abbrev=0 origin/main`), `wiki-setting obsidian`이 "Obsidian 맞음"인지.
 
 보고 첫 줄: "동기화 (vX) · 지운 브랜치 N · 남긴 브랜치 M · Obsidian 맞음". 남긴 브랜치가 있으면 이유(사람이 남기기로 함 · 열린 PR · worktree 사용 중)를 적는다.
