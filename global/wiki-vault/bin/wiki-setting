@@ -7,10 +7,13 @@
                                                          볼트 등록 (id는 그 폴더 wiki.toml [wiki] id). 이름 · 별칭 · 설명을 주면
                                                          vaults.toml에 두고 wiki.toml 값보다 먼저 쓴다 (wiki.toml이 없는 노트 폴더용)
   wiki-setting new-vault --profile personal --path <폴더>   위키 생성 + 등록 + 첫 점검
-  wiki-setting doctor [--fix]                            전역 스킬 · 목록 · 경로 · 세팅 버전 · 각 볼트 점검 (--fix: 옮겨진 볼트 경로 고침)
+  wiki-setting doctor [--fix]                            전역 스킬 · 목록 · 경로 · 세팅 버전 · 각 볼트 점검 (--fix: 옮겨진 볼트 경로와 그 Obsidian 볼트 고침)
   wiki-setting upgrade [<id>] [--yes]                    세팅 최신 릴리스 태그를 받아 볼트에 반영 (메이저는 --yes)
   wiki-setting check [--vault <폴더>]                    최신 확인: 세팅 사본 → main의 최신 릴리스 태그, 전역 스킬 버전,
                                                          볼트 세팅 버전(패치 · 마이너는 반영 · 커밋, 메이저는 알림), 볼트 main 기준
+  wiki-setting obsidian [--fix] [--prune]                Obsidian 볼트 목록을 위키 경로에 맞춘다: 옮기거나 이름을 바꾼 위키의 볼트 경로,
+                                                         없어진 폴더를 가리키는 볼트 설정(새 노트 · 첨부 · 템플릿 · 일지 폴더).
+                                                         --fix로 고친다(Obsidian이 꺼져 있을 때만). --prune: 폴더가 없는 볼트 항목을 지운다
 
 세팅(yw-wiki-setting)은 vaults.toml [setting] path의 git 사본을 쓴다. 원격이 있으면 main이 아니라 최신 릴리스 태그(vX.Y.Z)를 받는다.
 원격에 접속할 수 없으면 가진 사본으로 계속하고 doctor가 알린다.
@@ -36,6 +39,8 @@ SEARCH_ROOTS = [HOME / "Desktop" / "wiki", HOME / "vaults", HOME / "Desktop", HO
 DEFAULT_SETTING = HOME / "Desktop" / "wiki" / "yw-wiki-setting"
 PY = sys.executable
 VAULT_META = ("name", "description", "aliases")  # vaults.toml에 두면 wiki.toml [wiki] 값보다 먼저 쓴다
+# Obsidian 볼트 설정 중 폴더를 가리키는 값. 폴더 구조가 바뀌면 세팅 값(core/obsidian)으로 맞춘다
+OBSIDIAN_FOLDERS = {"app.json": ("newFileFolderPath", "attachmentFolderPath"), "templates.json": ("folder",), "daily-notes.json": ("folder",)}
 
 
 def load():
@@ -52,6 +57,8 @@ def dump(conf):
         lines += ["", "[setting]"] + [f'{k} = "{v}"' for k, v in s.items()]
     for vid, v in conf.get("vaults", {}).items():
         lines += ["", f"[vaults.{vid}]", f'path = "{v["path"]}"'] + (["readonly = true"] if v.get("readonly") else [])
+        if v.get("obsidian_id"):  # 이 PC의 Obsidian 볼트 id. 위키 폴더가 옮겨져도 같은 볼트를 따라간다
+            lines.append(f'obsidian_id = "{v["obsidian_id"]}"')
         for k in VAULT_META:
             if v.get(k):
                 val = v[k]
@@ -111,6 +118,126 @@ def latest_tag(sdir):
     if not tags:
         return None, note or "릴리스 태그 없음 — 로컬 사본 그대로 씀"
     return max(tags, key=lambda t: tuple(map(int, t[1:].split(".")))), note
+
+
+def obsidian_json():
+    if sys.platform == "darwin":
+        return HOME / "Library" / "Application Support" / "obsidian" / "obsidian.json"
+    if os.name == "nt":
+        return Path(os.environ.get("APPDATA", HOME)) / "obsidian" / "obsidian.json"
+    return Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config")) / "obsidian" / "obsidian.json"
+
+
+def obsidian_running():
+    """Obsidian이 켜져 있으면 obsidian.json을 고쳐도 끌 때 덮어쓴다. (시험: YW_OBSIDIAN_RUNNING=0/1)"""
+    if os.environ.get("YW_OBSIDIAN_RUNNING") in ("0", "1"):
+        return os.environ["YW_OBSIDIAN_RUNNING"] == "1"
+    try:
+        return subprocess.run(["pgrep", "-xi", "obsidian"], capture_output=True).returncode == 0
+    except FileNotFoundError:
+        return False
+
+
+def obsidian_vaults(conf, fix, prune=False, hints=None):
+    """위키마다 Obsidian 볼트를 찾아 경로를 맞춘다. (메모 목록, 문제 여부, vaults.toml을 고쳤나)
+    찾는 순서: 기록한 obsidian_id → 같은 경로 → 상위 폴더 볼트(그대로 둠) → 폴더가 없어진 볼트 중
+    이름이 같거나 hints(doctor가 고치기 전 경로)와 같은 것 하나."""
+    oj = obsidian_json()
+    if not oj.exists():
+        return ["Obsidian 볼트 목록 없음 — 건너뜀"], False, False
+    data = json.loads(oj.read_text())
+    ovs = data.setdefault("vaults", {})
+    gone = lambda o: not Path(o["path"]).exists()
+    notes, bad, conf_changed, moves, used = [], False, False, [], set()
+    for vid, v in conf.get("vaults", {}).items():
+        path = expand(v["path"])
+        if not path.exists():
+            continue
+        oid = v.get("obsidian_id") if v.get("obsidian_id") in ovs else None
+        oid = oid or next((i for i, o in ovs.items() if Path(o["path"]) == path), None)
+        if not oid:
+            cover = next((i for i, o in ovs.items() if path.is_relative_to(Path(o["path"]))), None)
+            if cover:
+                used.add(cover)
+                notes.append(f"{vid}: Obsidian은 상위 폴더 볼트 {short(ovs[cover]['path'])}로 엶")
+                continue
+            old = (hints or {}).get(vid)
+            cands = [i for i, o in ovs.items() if gone(o) and (Path(o["path"]).name == path.name or Path(o["path"]) == old)]
+            if len(cands) != 1:
+                notes.append(f"{vid}: Obsidian 볼트 없음" + (f" — 후보 여럿({', '.join(short(ovs[i]['path']) for i in cands)}), 사람이 고른다"
+                                                             if cands else " — Obsidian에서 이 폴더를 볼트로 열면 등록된다"))
+                continue
+            oid = cands[0]
+        used.add(oid)
+        if v.get("obsidian_id") != oid:
+            v["obsidian_id"], conf_changed = oid, True
+        if Path(ovs[oid]["path"]) != path:
+            moves.append((vid, oid, ovs[oid]["path"], str(path)))
+    stale = [i for i, o in ovs.items() if i not in used and gone(o)]
+    todo = moves + (stale if prune else [])
+    if todo and fix and obsidian_running():
+        notes.append("Obsidian이 켜져 있어 볼트 목록을 고치지 않음 — Obsidian을 끈 뒤 다시")
+        return notes, True, conf_changed
+    for vid, oid, old, new in moves:
+        if fix:
+            ovs[oid]["path"] = new
+        notes.append(f"{vid}: Obsidian 볼트 {short(old)} → {short(new)}" + ("" if fix else " (옮길 것 — --fix)"))
+        bad |= not fix
+    for oid in stale:
+        notes.append(f"폴더가 없는 Obsidian 볼트 {short(ovs[oid]['path'])}" + (" 지움" if fix and prune else " (지우려면 --fix --prune)"))
+        if fix and prune:
+            del ovs[oid]
+    if fix and todo:
+        shutil.copy2(oj, oj.with_name("obsidian.json.yw-bak"))  # 고치기 전 사본
+        oj.write_text(json.dumps(data, ensure_ascii=False))
+    return notes, bad, conf_changed
+
+
+def obsidian_folders(conf, sdir, fix):
+    """위키의 Obsidian 설정이 없는 폴더를 가리키면 세팅 값으로 맞춘다. (메모 목록, 문제 여부)"""
+    notes, bad = [], False
+    for vid, v in conf.get("vaults", {}).items():
+        path = expand(v["path"])
+        st = path / ".wiki-setting.toml"
+        if v.get("readonly") or not st.exists():
+            continue
+        profile = tomllib.loads(st.read_text()).get("profile", "personal")
+        for name, keys in OBSIDIAN_FOLDERS.items():
+            f = path / ".obsidian" / name
+            if not f.exists():
+                continue
+            conf_o = json.loads(f.read_text())
+            src = next((p for p in (sdir / "core" / "obsidian" / profile / name, sdir / "core" / "obsidian" / "common" / name) if p.exists()), None)
+            want = json.loads(src.read_text()) if src else {}
+            changed = False
+            for k in keys:
+                cur = conf_o.get(k)
+                if not cur or (path / cur).is_dir():
+                    continue
+                new = want.get(k)
+                if new and (path / new).is_dir():
+                    notes.append(f"{vid}: Obsidian {name} {k} {cur} → {new}" + ("" if fix else " (고칠 것 — --fix)"))
+                    if fix:
+                        conf_o[k], changed = new, True
+                    bad |= not fix
+                else:
+                    notes.append(f"{vid}: Obsidian {name} {k}가 없는 폴더 {cur}를 가리킴 — 사람이 정한다")
+                    bad = True
+            if changed:
+                f.write_text(json.dumps(conf_o, ensure_ascii=False, indent=2) + "\n")
+    return notes, bad
+
+
+def cmd_obsidian(a):
+    conf = load()
+    notes, bad, conf_changed = obsidian_vaults(conf, a.fix, a.prune)
+    n2, b2 = obsidian_folders(conf, setting_dir(conf), a.fix)
+    if conf_changed:
+        save(conf, False)
+    for n in notes + n2:
+        print(n)
+    print("Obsidian 맞음" if not (bad or b2) else "⚠ Obsidian 고칠 것 있음")
+    return 1 if bad or b2 else 0
 
 
 def cmd_install(a):
@@ -211,12 +338,13 @@ def cmd_doctor(a):
     if (sdir / ".git").exists():
         tag, note = latest_tag(sdir)
         print(f"  세팅 v{sver}" + (f" · 최신 릴리스 {tag}" if tag else "") + (f" · {note}" if note else ""))
-    changed = False
+    changed, hints = False, {}
     for vid, v in conf.get("vaults", {}).items():
         path = expand(v["path"])
         if not path.exists():
             hits = find_moved(vid)
             if len(hits) == 1 and a.fix:
+                hints[vid] = path
                 v["path"], path, changed = short(hits[0]), hits[0], True
                 print(f"! {vid}: 경로를 {short(hits[0])}로 고침")
             else:
@@ -235,7 +363,11 @@ def cmd_doctor(a):
         r = subprocess.run([PY, str(path / "tools" / "check.py"), str(path)], capture_output=True, text=True)
         last = (r.stdout.strip().splitlines() or [r.stderr.strip()])[-1]
         say(r.returncode == 0, f"  점검: {last}", f"{short(path)}에서 '점검해줘'")
-    if changed:
+    onotes, obad, ochanged = obsidian_vaults(conf, a.fix, hints=hints)  # 옮긴 위키는 Obsidian 볼트도 따라간다
+    for n in onotes:
+        print(f"  Obsidian: {n}")
+    bad += obad
+    if changed or ochanged:
         save(conf, False)
     print("문제 없음" if not bad else f"문제 {bad}개")
     return 1 if bad else 0
@@ -368,9 +500,11 @@ def main():
     s = sub.add_parser("doctor"); s.add_argument("--fix", action="store_true")
     s = sub.add_parser("upgrade"); s.add_argument("id", nargs="?"); s.add_argument("--yes", action="store_true")
     s = sub.add_parser("check"); s.add_argument("--vault")
+    s = sub.add_parser("obsidian"); s.add_argument("--fix", action="store_true"); s.add_argument("--prune", action="store_true")
     a = p.parse_args()
     return {"install": cmd_install, "list": cmd_list, "path": cmd_path, "register": cmd_register,
-            "new-vault": cmd_new_vault, "doctor": cmd_doctor, "upgrade": cmd_upgrade, "check": cmd_check}[a.cmd](a)
+            "new-vault": cmd_new_vault, "doctor": cmd_doctor, "upgrade": cmd_upgrade, "check": cmd_check,
+            "obsidian": cmd_obsidian}[a.cmd](a)
 
 
 if __name__ == "__main__":

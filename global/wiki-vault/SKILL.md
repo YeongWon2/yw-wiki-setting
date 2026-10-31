@@ -1,6 +1,6 @@
 ---
 name: wiki-vault
-description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/vaults.toml)에서 맞는 위키(개인 위키 · 읽기 전용으로 등록한 전사 위키)를 골라 그 위키의 AGENTS.md와 yw-wiki-* 스킬로 넘긴다. 위키를 직접 쓰지 않는다. "개인 위키에서 찾아줘", "내 위키 업데이트해줘", "내 위키 갱신해줘", "내 위키 완전 최신화해줘", "위키 리뷰해줘", "위키 점검해줘", "어떤 위키 있어?", "위키 등록해줘" 같은 요청에 쓴다.
+description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/vaults.toml)에서 맞는 위키(개인 위키 · 읽기 전용으로 등록한 전사 위키)를 골라 그 위키의 AGENTS.md와 yw-wiki-* 스킬로 넘긴다. 위키를 직접 쓰지 않는다. "개인 위키에서 찾아줘", "내 위키 업데이트해줘", "내 위키 동기화해줘", "내 위키 갱신해줘", "위키 리뷰해줘", "위키 점검해줘", "어떤 위키 있어?", "위키 등록해줘" 같은 요청에 쓴다.
 ---
 
 # wiki-vault — 위키 길잡이
@@ -28,8 +28,7 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 
 | 말 | 스킬 |
 |---|---|
-| 갱신해줘 · sync | `yw-wiki-sync` |
-| 완전 최신화 · main 기준으로 맞춰줘 · 브랜치 정리 | `yw-wiki-refresh` |
+| 동기화해줘 · 갱신해줘 · sync · 브랜치 정리 | `yw-wiki-sync` |
 | 업데이트해줘 · 넣어줘 | `yw-wiki-update` |
 | 리뷰해줘 · 검토할 것 | `yw-wiki-review` |
 | 찾아줘 · 어디까지 했지 | `yw-wiki-query` |
@@ -44,5 +43,6 @@ description: 내 LLM 위키 길잡이. 이 PC의 볼트 목록(~/.config/wiki/va
 | 등록 | `wiki-setting register <폴더>` (전사 위키는 `--id company --readonly`) |
 | 새 볼트 | `wiki-setting new-vault --profile personal --path <폴더>` |
 | 세팅 반영 | `wiki-setting upgrade [<id>]` (패치 · 마이너는 바로, 메이저는 확인) |
+| Obsidian 볼트 맞추기 | `wiki-setting obsidian [--fix] [--prune]` (옮긴 위키 폴더에 Obsidian 볼트 경로 · 폴더 설정을 맞춤. Obsidian을 끈 뒤) |
 
 목록이나 볼트 파일을 바꾸는 명령(register · new-vault · upgrade)은 무엇이 바뀌는지 먼저 보여 주고 확인받는다.

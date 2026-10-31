@@ -58,7 +58,7 @@ for p in personal; do
     "$W/_templates/review.md" > "$W/review/2026-10-28 시험 검토.md"
   "$PY" "$W/tools/check.py" "$W" > "$TMP/out" || { cat "$TMP/out"; fail "$p review 항목이 점검을 통과하지 못함"; }
   grep -q "검토 대기 1개" "$TMP/out" || fail "$p review 대기 경고 없음"
-  [ "$(ls "$W/.claude/skills" | wc -l | tr -d ' ')" = 6 ] && [ -f "$W/.claude/skills/yw-wiki-refresh/SKILL.md" ] || fail "$p 스킬 6개 아님"
+  [ "$(ls "$W/.claude/skills" | wc -l | tr -d ' ')" = 5 ] && [ -f "$W/.claude/skills/yw-wiki-sync/SKILL.md" ] || fail "$p 스킬 5개 아님"
 
   # 업그레이드: 바뀐 게 없으면 최신, 관리 파일을 망가뜨리면 되돌리고 local 구간은 남긴다
   "$PY" "$SETTING/scripts/upgrade.py" "$W" | grep -q "최신" || fail "$p upgrade 멱등"
@@ -97,6 +97,25 @@ git -C "$TMP/personal" reset -q --hard
 mv "$TMP/personal" "$TMP/moved-personal"
 "$PY" "$WS" doctor >/dev/null && fail "옮긴 볼트를 못 잡음"
 mv "$TMP/moved-personal" "$TMP/personal"
+# Obsidian: 위키 폴더를 옮기면 doctor --fix가 볼트 목록 · Obsidian 볼트를 따라 옮기고, 없어진 폴더 설정은 세팅 값으로
+case "$(uname)" in Darwin) OJ="$HOME/Library/Application Support/obsidian/obsidian.json" ;; *) OJ="$HOME/.config/obsidian/obsidian.json" ;; esac
+mkdir -p "$(dirname "$OJ")"
+P0=$(cd "$TMP/personal" && pwd -P)
+printf '{"vaults":{"aaaa":{"path":"%s","ts":1},"bbbb":{"path":"%s/gone","ts":1}}}' "$P0" "$TMP" > "$OJ"
+"$PY" "$WS" obsidian | grep -q "Obsidian 맞음" || fail "obsidian 맞는 상태를 못 봄"
+grep -q 'obsidian_id = "aaaa"' "$HOME/.config/wiki/vaults.toml" || fail "obsidian_id 기록 안 함"
+P1="$HOME/Desktop/wiki/renamed-personal"  # doctor가 찾는 곳으로 옮기며 이름도 바꾼다
+mkdir -p "$(dirname "$P1")" && mv "$TMP/personal" "$P1"
+YW_OBSIDIAN_RUNNING=1 "$PY" "$WS" doctor --fix >/dev/null 2>&1 || true  # 켜져 있으면 ⚠라 1
+grep -q "$P0" "$OJ" || fail "Obsidian이 켜져 있는데 obsidian.json을 고침"
+YW_OBSIDIAN_RUNNING=0 "$PY" "$WS" doctor --fix > "$TMP/doctor" 2>&1 || true  # 결과는 obsidian.json으로 본다
+grep -q "renamed-personal" "$OJ" || { cat "$TMP/doctor"; fail "옮긴 위키를 Obsidian 볼트가 따라가지 않음"; }
+sed -i.bak 's#"raw/assets"#"첨부"#' "$P1/.obsidian/app.json" && rm "$P1/.obsidian/app.json.bak"
+YW_OBSIDIAN_RUNNING=0 "$PY" "$WS" obsidian --fix | grep -q "attachmentFolderPath 첨부 → raw/assets" || fail "없는 폴더 설정을 세팅 값으로 안 고침"
+grep -q '"raw/assets"' "$P1/.obsidian/app.json" || fail "app.json 고침이 안 남음"
+YW_OBSIDIAN_RUNNING=0 "$PY" "$WS" obsidian --fix --prune >/dev/null
+grep -q '"bbbb"' "$OJ" && fail "--prune이 폴더 없는 볼트를 안 지움"
+mv "$P1" "$TMP/personal" && "$PY" "$WS" register "$TMP/personal" >/dev/null
 echo "0.0.1" > "$HOME/.claude/skills/wiki-vault/VERSION"
 "$PY" "$WS" check >/dev/null 2>&1 || true  # 오프라인 시험이라 ⚠(1)가 정상
 [ "$(cat "$HOME/.claude/skills/wiki-vault/VERSION")" = "$(cat "$SETTING/VERSION")" ] || fail "check가 낡은 전역 스킬을 다시 깔지 않음"
