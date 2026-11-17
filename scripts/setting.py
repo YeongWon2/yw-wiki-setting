@@ -54,7 +54,7 @@ def readme(conf):
 | 폴더 | 무엇 | 누가 쓰나 |
 |---|---|---|
 | `raw/` | 원본: {raw} | 나 (Claude는 읽기만) |
-| `wiki/` | 위키: entities · concepts · sources · synthesis · decisions, 목차 `index.md` · 기록 `log.md` | Claude |
+| `wiki/` | 위키: entities · concepts · sources · synthesis · guides · decisions, 목차 `index.md` · 기록 `log.md` | Claude |
 {extra}| `review/` | 사람이 정할 검토 대기 (충돌은 위키에 쓰지 않는다) | Claude가 쌓고 내가 정함 |
 
 ## 새 PC에서 시작하기

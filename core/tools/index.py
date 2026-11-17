@@ -10,7 +10,7 @@ import sys
 import wikilib
 
 SECTIONS = [("entities", "Entities"), ("concepts", "Concepts"), ("sources", "Sources"),
-            ("synthesis", "Synthesis"), ("decisions", "Decisions"), ("career", "Career")]
+            ("synthesis", "Synthesis"), ("guides", "Guides"), ("decisions", "Decisions"), ("career", "Career")]
 
 
 def entry(path, rel):

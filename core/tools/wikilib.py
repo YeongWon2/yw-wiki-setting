@@ -14,7 +14,7 @@ SKIP_DIRS = {".git", ".obsidian", ".trash", ".claude", ".githooks", ".yw-wiki", 
 SPECIAL = {"index.md", "log.md"}
 # type → 폴더 (wiki/ 기준)
 TYPE_DIRS = {"entity": "entities", "concept": "concepts", "source": "sources", "synthesis": "synthesis",
-             "decision": "decisions", "achievement": "career"}
+             "decision": "decisions", "achievement": "career", "guide": "guides"}
 LINK = re.compile(r"\[\[([^\]|#^]+)")
 
 

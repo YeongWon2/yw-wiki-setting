@@ -48,7 +48,7 @@ wiki-setting register <위키 폴더>        # 받아 둔 위키마다
 
 - 왜 이렇게 만들었나: [docs/철학.md](docs/철학.md)
 - 공통 규칙: `core/AGENTS.core.md` · 개인: `profiles/personal/AGENTS.profile.md`
-- 템플릿: core 6개(entity · concept · source · synthesis · decision · review), 개인 3개(achievement · daily · concept에 My understanding 칸을 더한 판)
+- 템플릿: core 6개(entity · concept · source · synthesis · decision · review), 개인 4개(achievement · daily · guide(원칙 · 규칙 · 절차, `wiki/guides/`) · concept에 My understanding 칸을 더한 판)
 - 버전: `VERSION`
 
 ## 기여

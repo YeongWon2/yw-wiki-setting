@@ -4,7 +4,7 @@
 id = "personal"
 name = "개인 위키"
 aliases = ["개인 위키", "내 위키", "personal"]
-description = "나, 사람, 개인 프로젝트, 학교, 일지, 커리어"
+description = "나, 사람, 개인 프로젝트, 학교, 일지, 커리어, 회사·개인에서 얻은 범용 지식(원칙 · 규칙 · 절차 · 도메인)"
 profile = "personal"
 language = "ko"
 
@@ -12,10 +12,15 @@ language = "ko"
 kinds = ["people", "orgs", "projects"]
 
 [folders]                       # profile 전용 폴더
-wiki = ["career"]
+wiki = ["career", "guides"]
 raw = ["daily", "notes", "assets"]
 
 # 개인 프로젝트 수집 경로 (있을 때만)
 # [projects."<프로젝트>"]
 # web = ["https://…"]
 # github = ["YeongWon2/<저장소>"]
+
+[guard]                         # 이 위키에 있으면 안 되는 것. 회사 지식은 넣되 식별 정보만 막는다 (AGENTS.md profile 2절)
+terms = []                      # 회사 · 조직 · 저장소 · 제품 · 고객 이름처럼 식별하는 말만. 일반 도메인 · 기술 말은 넣지 않는다
+patterns = ['[a-z0-9-]+\.atlassian\.net', 'slack\.com/archives']   # 정규식. 내부 도구 링크
+allow = ["index", "log"]

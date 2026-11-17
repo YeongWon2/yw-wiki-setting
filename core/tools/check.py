@@ -15,7 +15,10 @@
 - review/ 항목의 frontmatter(type: review · review_kind · status)가 틀렸다
 - raw/ 파일을 지우거나 옮겼다 (커밋에 올린 변경 기준)
 - index.md가 최신이 아니다 (python3.14 tools/index.py)
-- [guard] terms(이 위키에 있으면 안 되는 말)가 [guard] allow 밖의 파일에 있다
+- [guard] terms(이 위키에 있으면 안 되는 말) · [guard] patterns(정규식)가 [guard] allow 밖의 파일에 있다
+- guide: guide_kind · scope · maturity · owner_checked 값이 틀렸다, ## Rules가 번호 목록이 아니다,
+  ## Evidence 줄이 "- YYYY-MM-DD · 어디서 · 결과 — 근거" 형식이 아니다, tested인데 Evidence의 서로 다른 곳이 2개 미만이다,
+  proven인데 owner_checked가 true가 아니다, 내 방식(scope area:)인데 Evidence가 없다, owner_checked: true인데 owner_checked_on 날짜나 그날 log의 confirm 기록이 없다
 경고
 - raw/ 파일을 고쳤다 (사람이 고친 거면 괜찮다)
 - 같은 이름의 페이지가 둘 이상 · 들어오는 링크가 없는 고아 페이지
@@ -23,6 +26,8 @@
 - 진행 중인 project · course를 STALE_DAYS일 넘게 고치지 않음 · source 원본 확인(checked)이 STALE_DAYS일 넘음
 - proposed 결정이 PROPOSAL_DAYS일 넘음
 - review/에 pending 항목이 있다 (yw-wiki-review로 정한다) · REVIEW_DAYS일 넘은 pending
+- 이름이 거의 같은 페이지(공백 · 기호 · 대소문자만 다름) · 별칭이 다른 페이지 이름과 같음 (중복 후보)
+- guide가 seed인 채 SEED_DAYS일 넘게 고치지 않음 · 내가 확인하지 않은 guide 수 (owner_checked: false)
 오늘 날짜는 YW_TODAY(YYYY-MM-DD)로 바꿔 볼 수 있다.
   python3.14 tools/check.py [위키 경로]
 """
@@ -41,7 +46,7 @@ STATUSES = {"active", "superseded", "archived"}
 CONFIDENCE = {"high", "medium", "low"}
 ENTITY_KINDS = {"person", "org", "project", "course"}
 DECISION_STATUSES = {"proposed", "accepted", "superseded"}
-PROFILE_TYPES = {"personal": {"achievement"}}
+PROFILE_TYPES = {"personal": {"achievement", "guide"}}
 DATE_KEYS = ("created", "updated", "date", "checked")
 PLACEHOLDER = re.compile(r"\{\{\s*(date|title|time)[^}]*\}\}")
 LEGACY = re.compile(r"\[!hero\]|\[!cols\]|yw-wide|^## 🔗 참조", re.M)
@@ -53,6 +58,11 @@ STALE_DAYS = 30
 PROPOSAL_DAYS = 14
 REVIEW_DAYS = 14
 REVIEW_KINDS = {"conflict", "stale", "orphan", "duplicate", "raw-change"}
+GUIDE_KINDS = {"principle", "convention", "playbook"}
+MATURITY = {"seed", "tested", "proven"}
+SCOPE = re.compile(r"^(general|(stack|domain|project|area):\S.*)$")
+EVIDENCE = re.compile(r"^- (\d{4}-\d{2}-\d{2}) · ([^·]+?) · .+ — .+$")
+SEED_DAYS = 90
 
 
 def today():
@@ -81,6 +91,64 @@ def key_facts(body):
     if not m:
         return 0
     return sum(1 for line in m.group(1).splitlines() if re.match(r"^- \S", line))
+
+
+def section(body, name):
+    m = re.search(rf"^## {re.escape(name)}\s*$(.*?)(?=^## |\Z)", body, flags=re.M | re.S)
+    return re.sub(r"<!--.*?-->", "", m.group(1), flags=re.S) if m else ""
+
+
+def confirmed(log_text, day, stem):
+    """log.md에 그날 confirm 기록이 있고 그 기록(제목 · 세부)에 페이지 이름이 있나."""
+    for block in re.split(r"(?=^## \[)", log_text, flags=re.M):
+        if block.startswith(f"## [{day}] confirm |") and stem in block:
+            return True
+    return False
+
+
+def check_guide(rel, path, meta, body, log_text, now, errors, warnings):
+    if meta.get("guide_kind") not in GUIDE_KINDS:
+        errors.append(f"{rel}: guide_kind는 {sorted(GUIDE_KINDS)} 중 하나")
+    scope = meta.get("scope")
+    if not isinstance(scope, list) or not scope or not all(SCOPE.match(str(s)) for s in scope):
+        errors.append(f"{rel}: scope는 [general] · stack:<기술> · domain:<분야> · project:<이름> · area:<생활 영역> 목록")
+    maturity, owner = meta.get("maturity"), str(meta.get("owner_checked", "")).lower()
+    if maturity not in MATURITY:
+        errors.append(f"{rel}: maturity는 {sorted(MATURITY)} 중 하나")
+    if owner not in ("true", "false"):
+        errors.append(f"{rel}: owner_checked는 true · false")
+    rules = [l for l in section(body, "Rules").splitlines() if l.strip()]
+    if not rules or not all(re.match(r"^(\d+\.\s+\S|\s+\S)", l) for l in rules):
+        errors.append(f"{rel}: ## Rules는 번호 목록(1. …)으로 쓴다")
+    places = set()
+    for line in section(body, "Evidence").splitlines():
+        if not line.startswith("- "):
+            continue
+        m = EVIDENCE.match(line)
+        if not m or parse_date(m.group(1)) is None:
+            errors.append(f"{rel}: Evidence 줄 형식은 '- YYYY-MM-DD · 어디서 · 결과 — 근거' ({line[:40]})")
+        else:
+            places.add(m.group(2).strip())
+    if isinstance(scope, list) and any(str(s).startswith("area:") for s in scope) and not places:
+        errors.append(f"{rel}: 내 방식(scope area:)은 실제로 한 일을 Evidence에 1줄 이상 적어야 한다")
+    if maturity == "tested" and len(places) < 2:
+        errors.append(f"{rel}: maturity tested는 Evidence의 서로 다른 곳이 2개 이상일 때만 ({len(places)}개)")
+    if maturity == "proven" and owner != "true":
+        errors.append(f"{rel}: maturity proven은 owner_checked: true일 때만")
+    if owner == "true":
+        day = parse_date(meta.get("owner_checked_on", ""))
+        if not day:
+            errors.append(f"{rel}: owner_checked: true면 owner_checked_on(YYYY-MM-DD)이 있어야 한다")
+        elif not confirmed(log_text, day.isoformat(), path.stem):
+            errors.append(f"{rel}: {day} log에 confirm 기록이 없다 — python3.14 tools/log.py confirm \"{path.stem}\"")
+    updated = parse_date(meta.get("updated", ""))
+    if maturity == "seed" and updated and now - updated > timedelta(days=SEED_DAYS):
+        warnings.append(f"{rel}: guide가 seed인 채 {SEED_DAYS}일 넘게 그대로 (updated {updated})")
+    return owner == "true"
+
+
+def norm(name):
+    return re.sub(r"[\s\W_]+", "", str(name)).lower()
 
 
 def staged_raw_changes(root):
@@ -112,6 +180,10 @@ def main():
         templates[t.stem] = headings(wikilib.frontmatter(t.read_text())[1])
 
     incoming = {}
+    log_path = root / "wiki" / "log.md"
+    log_text = log_path.read_text() if log_path.exists() else ""
+    unchecked_guides = 0
+    stems, alias_of = {}, {}
 
     # 링크는 wiki/ · raw/ · 루트 문서 모두에서 본다
     for path, rel in files:
@@ -200,6 +272,12 @@ def main():
             d = parse_date(meta.get("date", ""))
             if ds == "proposed" and d and now - d > timedelta(days=PROPOSAL_DAYS):
                 warnings.append(f"{rel}: proposed가 {PROPOSAL_DAYS}일 넘음 ({d})")
+        if kind == "guide" and not check_guide(rel, path, meta, body, log_text, now, errors, warnings):
+            unchecked_guides += 1
+        stems.setdefault(norm(path.stem), []).append(rel)
+        for a in meta.get("aliases") or []:
+            if isinstance(a, str) and a:
+                alias_of.setdefault(norm(a), set()).add(path.stem)
         if key_facts(body) > MAX_FACTS:
             warnings.append(f"{rel}: Key facts {key_facts(body)}개 — {MAX_FACTS}개를 넘으면 나눈다")
         if path.stem not in incoming:
@@ -210,6 +288,17 @@ def main():
         if len(md) > 1:
             warnings.append(f"같은 이름 '{name}': {', '.join(map(str, md))}")
 
+    for key, rels in stems.items():
+        if len(rels) > 1 and len({r.stem for r in rels}) > 1:
+            warnings.append(f"이름이 거의 같은 페이지(중복 후보): {', '.join(map(str, rels))}")
+    by_norm = {k: {r.stem for r in v} for k, v in stems.items()}
+    for key, owners in alias_of.items():
+        clash = by_norm.get(key, set()) - owners
+        if clash:
+            warnings.append(f"별칭이 다른 페이지 이름과 같음(중복 후보): {sorted(owners)} ↔ {sorted(clash)}")
+    if unchecked_guides:
+        warnings.append(f"내가 확인하지 않은 guide {unchecked_guides}개 (owner_checked: false) — yw-wiki-review에서 확인")
+
     for status, rel in staged_raw_changes(root):
         if status in "DR":
             errors.append(f"{rel}: raw/ 파일을 지우거나 옮김 — raw는 고치지 않는다")
@@ -217,10 +306,10 @@ def main():
             warnings.append(f"{rel}: raw/ 파일을 고침 — 사람이 고친 것이 아니면 되돌린다")
 
     guard = conf.get("guard", {})
-    terms = [t for t in guard.get("terms", []) if t]
+    terms = [re.escape(t) for t in guard.get("terms", []) if t] + [p for p in guard.get("patterns", []) if p]
     if terms:
         allow = set(guard.get("allow", []))
-        pattern = re.compile("|".join(re.escape(t) for t in terms), re.I)
+        pattern = re.compile("|".join(terms), re.I)
         for path, rel in files:
             if path.suffix != ".md" or path.stem in allow:
                 continue

@@ -22,10 +22,11 @@ description: "[{{wiki_name}}] 위키를 점검하고 고친다(lint). tools/chec
 위키 페이지는 고치지 않고 항목마다 `review/`에 review 템플릿(`found_by: lint`)으로 남긴다. 이미 같은 항목이 있으면 새로 만들지 않는다. 정하는 것은 [yw-wiki-review](../yw-wiki-review/SKILL.md)다.
 
 - 페이지끼리 사실이 다름, 원본이 바뀌어 낡은 주장, 오래된 proposed 결정.
-- 같은 이름 후보, 대상이 둘 이상인 깨진 링크.
+- 같은 이름 후보 · 이름이 거의 같은 페이지 · 별칭이 다른 페이지 이름과 같은 것(check.py 중복 후보 경고), 대상이 둘 이상인 깨진 링크.
+- guide인데 내용이 "무엇인가"뿐이거나 concept인데 규칙 · 절차뿐인 것(유형 옮기기 후보).
 - `raw/` 파일을 고치거나 지운 흔적 (되돌릴지).
 
-고아 페이지는 review/에 남기지 않고 경고로만 보고한다.
+고아 페이지 · 오래된 seed guide · 미확인 guide 수는 review/에 남기지 않고 경고로만 보고한다. `maturity` · `owner_checked`를 lint가 올리거나 내리지 않는다.
 
 **묻고 하는 것:** 페이지 삭제, `status` 를 archived로 바꾸기(사용자가 끝났다고 말한 것은 바로), 히스토리 재작성.
 

@@ -40,6 +40,42 @@ for p in personal; do
   "$PY" "$W/tools/index.py" "$W" >/dev/null
   "$PY" "$W/tools/check.py" "$W" >/dev/null || { "$PY" "$W/tools/check.py" "$W"; fail "$p 템플릿 페이지가 점검을 통과하지 못함"; }
 
+  # guide 하네스: 템플릿 원칙은 통과, 규칙을 어긴 판은 오류 · 경고
+  G="$W/wiki/guides/시험 원칙.md"
+  EV='- 2026-10-28 · 개인 프로젝트 · 통했다 — [[시험 개념]]'
+  EV2='- 2026-10-28 · 학교 과제 · 통했다 — [[시험 개념]]'
+  guide() { sed -e 's/{{title}}/시험 원칙/g' -e 's/{{date}}/2026-10-28/g' -e 's/^related: \[\]/related: ["[[시험 개념]]"]/' \
+      -e 's/^1\. $/1. 시험 규칙을 지킨다./' "$@" "$W/_templates/guide.md" > "$G"; }
+  expect() {  # expect <ok|err|warn> <찾을 말> <설명>
+    "$PY" "$W/tools/check.py" "$W" > "$TMP/g"; rc=$?
+    case $1 in
+      ok) [ $rc = 0 ] || { cat "$TMP/g"; fail "$p guide $3"; } ;;
+      err) [ $rc = 1 ] && grep -q "$2" "$TMP/g" || { cat "$TMP/g"; fail "$p guide $3"; } ;;
+      warn) grep -q "경고.*$2" "$TMP/g" || { cat "$TMP/g"; fail "$p guide $3"; } ;;
+    esac; }
+  guide; "$PY" "$W/tools/index.py" "$W" >/dev/null
+  set +e
+  expect ok "" "템플릿 원칙이 점검을 통과하지 못함"
+  expect warn "확인하지 않은 guide 1개" "미확인 guide 수 경고 없음"
+  guide -e 's/^guide_kind:.*/guide_kind: rule/'; expect err "guide_kind" "틀린 guide_kind를 못 잡음"
+  guide -e 's/^scope:.*/scope: [회사]/'; expect err "scope" "틀린 scope를 못 잡음"
+  guide -e 's/^1\. 시험 규칙을 지킨다\./규칙 한 줄/'; expect err "번호 목록" "번호 없는 Rules를 못 잡음"
+  guide -e 's/^<!-- 적용 기록.*$/- 어제 해 봄/'; expect err "Evidence 줄 형식" "틀린 Evidence 줄을 못 잡음"
+  guide -e "s/^<!-- 적용 기록.*\$/$EV/" -e 's/^maturity:.*/maturity: tested/'; expect err "tested는" "곳 하나로 tested를 못 막음"
+  guide -e "s/^<!-- 적용 기록.*\$/$EV\\
+$EV2/" -e 's/^maturity:.*/maturity: tested/'; expect ok "" "곳 둘인 tested가 통과하지 못함"
+  guide -e 's/^maturity:.*/maturity: proven/'; expect err "proven은" "확인 없는 proven을 못 막음"
+  guide -e 's/^scope:.*/scope: [area:여행]/'; expect err "내 방식" "Evidence 없는 내 방식을 못 막음"
+  guide -e 's/^scope:.*/scope: [area:여행]/' -e "s/^<!-- 적용 기록.*\$/$EV/"; expect ok "" "Evidence 있는 내 방식이 통과하지 못함"
+  guide -e 's/^owner_checked:.*/owner_checked: true/' -e 's/^owner_checked_on:.*/owner_checked_on: 2026-10-28/'
+  expect err "confirm 기록이 없다" "log 없는 owner_checked를 못 막음"
+  "$PY" "$W/tools/log.py" "$W" confirm "시험 원칙" "맞다" >/dev/null; expect ok "" "confirm 뒤 owner_checked가 통과하지 못함"
+  guide -e 's#^- $#- https://x.atlassian.net/browse/A-1#'; expect err "두지 않는 말" "[guard] patterns(내부 링크)를 못 잡음"
+  guide; cp "$G" "$W/wiki/guides/시험원칙.md"; sed -i.bak 's/^title: .*/title: "시험원칙"/' "$W/wiki/guides/시험원칙.md"
+  "$PY" "$W/tools/index.py" "$W" >/dev/null; expect warn "중복 후보" "이름이 거의 같은 페이지를 못 잡음"
+  set -e
+  rm -f "$W/wiki/guides/시험원칙.md" "$W/wiki/guides/시험원칙.md.bak"; "$PY" "$W/tools/index.py" "$W" >/dev/null
+
   # 없는 파일 · 로컬 절대 경로 마크다운 링크는 오류
   printf '\n- [없음](../../raw/없는%%20파일.md)\n' >> "$W/wiki/concepts/시험 개념.md"
   "$PY" "$W/tools/check.py" "$W" | grep -q "없는 파일 링크" || fail "$p 없는 파일 링크를 못 잡음"
