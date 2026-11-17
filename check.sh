@@ -15,6 +15,7 @@ for p in personal; do
   W="$TMP/$p"
   "$PY" "$SETTING/scripts/new_wiki.py" --profile "$p" --dest "$W" >/dev/null || fail "$p 생성 직후 check.py 오류"
   "$PY" "$W/tools/index.py" "$W" --check >/dev/null || fail "$p index 최신 아님"
+  [ -d "$W/wiki/guides" ] && grep -q "^# 내 방식 지도" "$W/wiki/synthesis/내 방식 지도.md" || fail "$p 시드(guides 폴더 · 내 방식 지도) 없음"
   [ "$(cat "$W/CLAUDE.md")" = "@AGENTS.md" ] || fail "$p CLAUDE.md"
   grep -q "profile:start $p" "$W/AGENTS.md" || fail "$p AGENTS.md profile 구간"
   grep -rq '{{wiki_name}}' "$W/.claude/skills" && fail "$p 스킬 이름 치환 안 됨"
@@ -45,7 +46,8 @@ for p in personal; do
   EV='- 2026-10-28 · 개인 프로젝트 · 통했다 — [[시험 개념]]'
   EV2='- 2026-10-28 · 학교 과제 · 통했다 — [[시험 개념]]'
   guide() { sed -e 's/{{title}}/시험 원칙/g' -e 's/{{date}}/2026-10-28/g' -e 's/^related: \[\]/related: ["[[시험 개념]]"]/' \
-      -e 's/^sources: \[\]/sources: ["[[시험 개념]]"]/' -e 's/^1\. $/1. 시험 규칙을 지킨다./' "$@" "$W/_templates/guide.md" > "$G"; }
+      -e 's/^sources: \[\]/sources: ["[[시험 개념]]"]/' -e 's/^1\. $/1. 시험 규칙을 지킨다./' \
+      -e 's/^<!-- 어떻게 작업했나.*$/1. 조사하고 만들고 시험했다./' "$@" "$W/_templates/guide.md" > "$G"; }
   expect() {  # expect <ok|err|warn> <찾을 말> <설명>
     "$PY" "$W/tools/check.py" "$W" > "$TMP/g"; rc=$?
     case $1 in
@@ -69,6 +71,7 @@ $EV2/" -e 's/^maturity:.*/maturity: tested/'; expect ok "" "곳 둘인 tested가
   guide -e 's/^scope:.*/scope: [area:여행]/' -e "s/^<!-- 적용 기록.*\$/$EV/"; expect ok "" "Evidence 있는 내 방식이 통과하지 못함"
   guide -e 's/^scope:.*/scope: [org:시험회사]/'; expect err "회사 방식" "Evidence 없는 회사 방식을 못 막음"
   guide -e 's/^scope:.*/scope: [project:시험]/'; expect err "프로젝트 방식" "Evidence 없는 프로젝트 방식을 못 막음"
+  guide -e 's/^scope:.*/scope: [area:일]/' -e "s/^<!-- 적용 기록.*\$/$EV/" -e 's/^1\. 조사하고 만들고 시험했다\.$//'; expect err "How it was done" "빈 작업 과정을 못 막음"
   guide -e 's/^sources: .*/sources: []/'; expect err "근거 없는 guide" "근거 없는 guide를 못 막음"
   guide -e 's/^status:.*/status: superseded/'; expect err "superseded_by" "superseded_by 없는 guide를 못 막음"
   guide -e 's/^owner_checked:.*/owner_checked: true/' -e 's/^owner_checked_on:.*/owner_checked_on: 2026-10-28/'

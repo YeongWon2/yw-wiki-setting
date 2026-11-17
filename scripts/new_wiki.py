@@ -52,6 +52,13 @@ def create(profile, dest, in_place=False, git=True):
         if not (dest / rel).exists() or rel.startswith(".obsidian/"):
             setting.write(dest, rel, text)
 
+    # 프로필 시드 페이지(입구 지도 등): 없을 때만 한 번 깐다. 이미 있는 위키 페이지는 덮어쓰지 않는다
+    seed = setting.SETTING / "profiles" / profile / "seed"
+    for src in sorted(seed.rglob("*.md")) if seed.is_dir() else []:
+        rel = str(src.relative_to(seed))
+        if not (dest / rel).exists():
+            setting.write(dest, rel, src.read_text().replace("{{date}}", setting.today()))
+
     setting.ensure_gitignore(dest)
     tools = dest / "tools"
     if not (dest / "wiki" / "log.md").exists():

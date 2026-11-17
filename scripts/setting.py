@@ -14,6 +14,13 @@ PROFILES = ("personal",)
 REPO = "YeongWon2/yw-wiki-setting"
 
 
+def today():
+    """오늘 날짜(YYYY-MM-DD). 시험에서는 YW_TODAY로 바꾼다."""
+    import os
+    from datetime import date
+    return os.environ.get("YW_TODAY") or date.today().isoformat()
+
+
 def version():
     return (SETTING / "VERSION").read_text().strip()
 
