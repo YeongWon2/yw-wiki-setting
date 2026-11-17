@@ -28,14 +28,15 @@ description: "[{{wiki_name}}] 원본을 위키에 반영한다(업데이트 · i
    - Evidence의 서로 다른 곳이 2개가 되면 `maturity: tested`. `owner_checked`는 사용자가 "맞다"고 말한 때만 true(`owner_checked_on` + `log.py confirm "<페이지>"`). `proven`은 그 뒤에만.
    - 없으면 템플릿으로 새로 만든다(guide는 `maturity: seed`, `owner_checked: false`). 사용자가 직접 말한 결정은 `accepted`, 추론한 결정은 `proposed` + `confidence: low`.
 5. **이웃:** 새로 만들거나 크게 바뀐 페이지와 연결된 페이지의 Connections와 요약을 함께 고친다.
-6. **모순 · 중복 (사람 검토 필수):** 같은 범위에서 새 원본이 기존 사실과 다르거나 원본끼리 다르면, 또는 같은 이름 후보면 그 항목은 `wiki/`에 쓰지 않고 `review/YYYY-MM-DD <페이지> <요약>.md`에 review 템플릿(`found_by: update`)으로 남긴다. 위키 페이지에 충돌 내용을 적지 않는다.
-7. 고친 페이지는 `updated`를 오늘로 바꾼다. `raw/`는 고치지 않는다.
+6. **guide끼리 겹침 · 어긋남 (직접 해결):** AGENTS.md profile 합치기 판정대로 직접 합치고 `log.py merge`로 남긴다. 묻지 않는다.
+7. **사실 모순 · guide 아닌 중복 (사람 검토 필수):** 날짜 · 이력 · 수치 같은 사실이 기존과 다르거나 원본끼리 다르면, 또는 guide가 아닌 페이지의 같은 이름 후보면 그 항목은 `wiki/`에 쓰지 않고 `review/YYYY-MM-DD <페이지> <요약>.md`에 review 템플릿(`found_by: update`)으로 남긴다. 위키 페이지에 충돌 내용을 적지 않는다.
+8. 고친 페이지는 `updated`를 오늘로 바꾼다. `raw/`는 고치지 않는다.
 
 ## 3. 마무리
 
 ```sh
 python3.14 tools/index.py
-python3.14 tools/log.py update "<제목>" "source N" "새 페이지 M" "같음 N" "보강 N" "범위 N" "모순 N"
+python3.14 tools/log.py update "<제목>" "source N" "새 페이지 M" "같음 N" "보강 N" "범위 N" "합침 N" "모순 N"
 python3.14 tools/check.py
 ```
 

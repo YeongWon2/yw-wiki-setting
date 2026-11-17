@@ -17,12 +17,16 @@ description: "[{{wiki_name}}] 위키를 점검하고 고친다(lint). tools/chec
 - 깨진 링크 중 대상 후보가 하나뿐인 것(이름 오타, 이름이 바뀐 페이지).
 - Key facts가 12개를 넘음 → 주제별로 페이지를 나누고 서로 링크한다.
 
+## 2-1. 직접 합치는 것 (guide, 묻지 않음)
+
+guide(내 방식 · 원칙 · 회사 방식 · 레퍼런스)끼리 겹치거나 어긋나면 AGENTS.md profile의 합치기 판정(guide끼리 겹침)대로 직접 정한다: 남길 페이지에 내용 · Evidence를 모으고, 없앨 페이지는 `status: superseded` · `superseded_by`, 이유는 남긴 페이지 Key facts 한 줄과 `python3.14 tools/log.py merge "<남긴 페이지>" "없앤 쪽: …" "이유: …"`.
+
 ## 3. review/에 남기는 것
 
 위키 페이지는 고치지 않고 항목마다 `review/`에 review 템플릿(`found_by: lint`)으로 남긴다. 이미 같은 항목이 있으면 새로 만들지 않는다. 정하는 것은 [yw-wiki-review](../yw-wiki-review/SKILL.md)다.
 
 - 페이지끼리 사실이 다름, 원본이 바뀌어 낡은 주장, 오래된 proposed 결정.
-- 같은 이름 후보 · 이름이 거의 같은 페이지 · 별칭이 다른 페이지 이름과 같은 것(check.py 중복 후보 경고), 대상이 둘 이상인 깨진 링크.
+- guide가 아닌 페이지의 같은 이름 후보 · 이름이 거의 같은 페이지(check.py 중복 후보 경고), 대상이 둘 이상인 깨진 링크.
 - guide인데 내용이 "무엇인가"뿐이거나 concept인데 규칙 · 절차뿐인 것(유형 옮기기 후보).
 - `raw/` 파일을 고치거나 지운 흔적 (되돌릴지).
 

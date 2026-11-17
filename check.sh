@@ -45,7 +45,7 @@ for p in personal; do
   EV='- 2026-10-28 · 개인 프로젝트 · 통했다 — [[시험 개념]]'
   EV2='- 2026-10-28 · 학교 과제 · 통했다 — [[시험 개념]]'
   guide() { sed -e 's/{{title}}/시험 원칙/g' -e 's/{{date}}/2026-10-28/g' -e 's/^related: \[\]/related: ["[[시험 개념]]"]/' \
-      -e 's/^1\. $/1. 시험 규칙을 지킨다./' "$@" "$W/_templates/guide.md" > "$G"; }
+      -e 's/^sources: \[\]/sources: ["[[시험 개념]]"]/' -e 's/^1\. $/1. 시험 규칙을 지킨다./' "$@" "$W/_templates/guide.md" > "$G"; }
   expect() {  # expect <ok|err|warn> <찾을 말> <설명>
     "$PY" "$W/tools/check.py" "$W" > "$TMP/g"; rc=$?
     case $1 in
@@ -67,6 +67,9 @@ $EV2/" -e 's/^maturity:.*/maturity: tested/'; expect ok "" "곳 둘인 tested가
   guide -e 's/^maturity:.*/maturity: proven/'; expect err "proven은" "확인 없는 proven을 못 막음"
   guide -e 's/^scope:.*/scope: [area:여행]/'; expect err "내 방식" "Evidence 없는 내 방식을 못 막음"
   guide -e 's/^scope:.*/scope: [area:여행]/' -e "s/^<!-- 적용 기록.*\$/$EV/"; expect ok "" "Evidence 있는 내 방식이 통과하지 못함"
+  guide -e 's/^scope:.*/scope: [org:시험회사]/'; expect err "회사 방식" "Evidence 없는 회사 방식을 못 막음"
+  guide -e 's/^sources: .*/sources: []/'; expect err "근거 없는 guide" "근거 없는 guide를 못 막음"
+  guide -e 's/^status:.*/status: superseded/'; expect err "superseded_by" "superseded_by 없는 guide를 못 막음"
   guide -e 's/^owner_checked:.*/owner_checked: true/' -e 's/^owner_checked_on:.*/owner_checked_on: 2026-10-28/'
   expect err "confirm 기록이 없다" "log 없는 owner_checked를 못 막음"
   "$PY" "$W/tools/log.py" "$W" confirm "시험 원칙" "맞다" >/dev/null; expect ok "" "confirm 뒤 owner_checked가 통과하지 못함"

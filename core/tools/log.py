@@ -3,8 +3,8 @@
 
   python3.14 tools/log.py <작업> <제목> [세부 …]
   예: python3.14 tools/log.py update "2026-10-29 회의" "새 source 1" "갱신 entity 2"
-작업: sync · update · review · query · lint · upgrade · migrate · career · confirm
-confirm: 내가 guide를 "맞다"고 확인했을 때. 제목에 페이지 이름을 쓴다 (guide의 owner_checked: true 근거)
+작업: sync · update · review · query · lint · upgrade · migrate · career · confirm · merge
+merge: 겹치는 guide를 합쳤을 때. 세부에 남긴 쪽 · 없앤 쪽 · 정한 이유. confirm: 내가 guide를 "맞다"고 확인했을 때. 제목에 페이지 이름을 쓴다 (guide의 owner_checked: true 근거)
 """
 import os
 import sys

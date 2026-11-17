@@ -18,7 +18,8 @@
 - [guard] terms(이 위키에 있으면 안 되는 말) · [guard] patterns(정규식)가 [guard] allow 밖의 파일에 있다
 - guide: guide_kind · scope · maturity · owner_checked 값이 틀렸다, ## Rules가 번호 목록이 아니다,
   ## Evidence 줄이 "- YYYY-MM-DD · 어디서 · 결과 — 근거" 형식이 아니다, tested인데 Evidence의 서로 다른 곳이 2개 미만이다,
-  proven인데 owner_checked가 true가 아니다, 내 방식(scope area:)인데 Evidence가 없다, owner_checked: true인데 owner_checked_on 날짜나 그날 log의 confirm 기록이 없다
+  proven인데 owner_checked가 true가 아니다, 내 방식(area:) · 회사 방식(org:)인데 Evidence가 없다,
+  sources도 Evidence도 없다, superseded인데 superseded_by가 없다, owner_checked: true인데 owner_checked_on 날짜나 그날 log의 confirm 기록이 없다
 경고
 - raw/ 파일을 고쳤다 (사람이 고친 거면 괜찮다)
 - 같은 이름의 페이지가 둘 이상 · 들어오는 링크가 없는 고아 페이지
@@ -60,7 +61,7 @@ REVIEW_DAYS = 14
 REVIEW_KINDS = {"conflict", "stale", "orphan", "duplicate", "raw-change"}
 GUIDE_KINDS = {"principle", "convention", "playbook"}
 MATURITY = {"seed", "tested", "proven"}
-SCOPE = re.compile(r"^(general|(stack|domain|project|area):\S.*)$")
+SCOPE = re.compile(r"^(general|(stack|domain|project|area|org):\S.*)$")
 EVIDENCE = re.compile(r"^- (\d{4}-\d{2}-\d{2}) · ([^·]+?) · .+ — .+$")
 SEED_DAYS = 90
 
@@ -111,7 +112,7 @@ def check_guide(rel, path, meta, body, log_text, now, errors, warnings):
         errors.append(f"{rel}: guide_kind는 {sorted(GUIDE_KINDS)} 중 하나")
     scope = meta.get("scope")
     if not isinstance(scope, list) or not scope or not all(SCOPE.match(str(s)) for s in scope):
-        errors.append(f"{rel}: scope는 [general] · stack:<기술> · domain:<분야> · project:<이름> · area:<생활 영역> 목록")
+        errors.append(f"{rel}: scope는 [general] · stack:<기술> · domain:<분야> · project:<이름> · area:<생활 영역> · org:<회사> 목록")
     maturity, owner = meta.get("maturity"), str(meta.get("owner_checked", "")).lower()
     if maturity not in MATURITY:
         errors.append(f"{rel}: maturity는 {sorted(MATURITY)} 중 하나")
@@ -129,8 +130,16 @@ def check_guide(rel, path, meta, body, log_text, now, errors, warnings):
             errors.append(f"{rel}: Evidence 줄 형식은 '- YYYY-MM-DD · 어디서 · 결과 — 근거' ({line[:40]})")
         else:
             places.add(m.group(2).strip())
-    if isinstance(scope, list) and any(str(s).startswith("area:") for s in scope) and not places:
-        errors.append(f"{rel}: 내 방식(scope area:)은 실제로 한 일을 Evidence에 1줄 이상 적어야 한다")
+    if isinstance(scope, list) and any(str(s).startswith(("area:", "org:")) for s in scope) and not places:
+        errors.append(f"{rel}: 내 방식(area:) · 회사 방식(org:)은 실제로 한 일을 Evidence에 1줄 이상 적어야 한다")
+    if not places and not meta.get("sources"):
+        errors.append(f"{rel}: 근거 없는 guide — sources나 Evidence에 근거를 적는다")
+    if meta.get("status") == "superseded":
+        target = wikilib.links(f"x {meta.get('superseded_by') or ''}")
+        if not target:
+            errors.append(f"{rel}: superseded guide에 superseded_by(\"[[남길 페이지]]\")가 없음")
+        elif target == [path.stem]:
+            errors.append(f"{rel}: superseded_by가 자기 자신을 가리킴")
     if maturity == "tested" and len(places) < 2:
         errors.append(f"{rel}: maturity tested는 Evidence의 서로 다른 곳이 2개 이상일 때만 ({len(places)}개)")
     if maturity == "proven" and owner != "true":
