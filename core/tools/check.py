@@ -18,7 +18,7 @@
 - [guard] terms(이 위키에 있으면 안 되는 말) · [guard] patterns(정규식)가 [guard] allow 밖의 파일에 있다
 - guide: guide_kind · scope · maturity · owner_checked 값이 틀렸다, ## Rules가 번호 목록이 아니다,
   ## Evidence 줄이 "- YYYY-MM-DD · 어디서 · 결과 — 근거" 형식이 아니다, tested인데 Evidence의 서로 다른 곳이 2개 미만이다,
-  proven인데 owner_checked가 true가 아니다, 내 방식(area:) · 회사 방식(org:)인데 Evidence가 없다,
+  proven인데 owner_checked가 true가 아니다, 내 방식(area:) · 회사 방식(org:) · 프로젝트 방식(project:)인데 Evidence가 없다,
   sources도 Evidence도 없다, superseded인데 superseded_by가 없다, owner_checked: true인데 owner_checked_on 날짜나 그날 log의 confirm 기록이 없다
 경고
 - raw/ 파일을 고쳤다 (사람이 고친 거면 괜찮다)
@@ -130,8 +130,8 @@ def check_guide(rel, path, meta, body, log_text, now, errors, warnings):
             errors.append(f"{rel}: Evidence 줄 형식은 '- YYYY-MM-DD · 어디서 · 결과 — 근거' ({line[:40]})")
         else:
             places.add(m.group(2).strip())
-    if isinstance(scope, list) and any(str(s).startswith(("area:", "org:")) for s in scope) and not places:
-        errors.append(f"{rel}: 내 방식(area:) · 회사 방식(org:)은 실제로 한 일을 Evidence에 1줄 이상 적어야 한다")
+    if isinstance(scope, list) and any(str(s).startswith(("area:", "org:", "project:")) for s in scope) and not places:
+        errors.append(f"{rel}: 내 방식(area:) · 회사 방식(org:) · 프로젝트 방식(project:)은 실제로 한 일을 Evidence에 1줄 이상 적어야 한다")
     if not places and not meta.get("sources"):
         errors.append(f"{rel}: 근거 없는 guide — sources나 Evidence에 근거를 적는다")
     if meta.get("status") == "superseded":

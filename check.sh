@@ -68,6 +68,7 @@ $EV2/" -e 's/^maturity:.*/maturity: tested/'; expect ok "" "곳 둘인 tested가
   guide -e 's/^scope:.*/scope: [area:여행]/'; expect err "내 방식" "Evidence 없는 내 방식을 못 막음"
   guide -e 's/^scope:.*/scope: [area:여행]/' -e "s/^<!-- 적용 기록.*\$/$EV/"; expect ok "" "Evidence 있는 내 방식이 통과하지 못함"
   guide -e 's/^scope:.*/scope: [org:시험회사]/'; expect err "회사 방식" "Evidence 없는 회사 방식을 못 막음"
+  guide -e 's/^scope:.*/scope: [project:시험]/'; expect err "프로젝트 방식" "Evidence 없는 프로젝트 방식을 못 막음"
   guide -e 's/^sources: .*/sources: []/'; expect err "근거 없는 guide" "근거 없는 guide를 못 막음"
   guide -e 's/^status:.*/status: superseded/'; expect err "superseded_by" "superseded_by 없는 guide를 못 막음"
   guide -e 's/^owner_checked:.*/owner_checked: true/' -e 's/^owner_checked_on:.*/owner_checked_on: 2026-10-28/'

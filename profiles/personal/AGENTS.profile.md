@@ -39,6 +39,7 @@
 | 코드 컨벤션 · 아키텍처 구조 규칙 · 작업 규칙 | `wiki/guides/` | guide (`guide_kind: convention`) |
 | 절차 · 파이프라인 · 워크플로 · 자동화 · AI 활용법 · 노하우 | `wiki/guides/` | guide (`guide_kind: playbook`) |
 | 회사에서 해 온 방식(규칙 · 원칙 · 아키텍처 · 워크플로) | `wiki/guides/` `<회사> 방식 - …` | guide (`scope`에 `org:<회사>`, Evidence 필수) |
+| 개인 · 사이드 프로젝트에서 해 온 방식 | `wiki/guides/` `<프로젝트> 방식 - …` | guide (`scope`에 `project:<프로젝트>`, Evidence 필수) |
 | 레퍼런스 문서 · 글 · 세션 하나 | `wiki/sources/` | source |
 | 비교 · 타임라인 · 분야 지도 · 시험 준비 · 과제 · 기획서 | `wiki/synthesis/` | synthesis |
 | 결정 | `wiki/decisions/` | decision |
@@ -49,7 +50,8 @@
 
 - 고르는 기준: "무엇인가"면 concept, "어떻게 하나 · 무엇을 지키나"면 guide, "무엇을 묶어 봤나"면 synthesis, "무엇을 정했나"면 decision.
 - 수업 entity의 Connections에는 그 수업의 concept · synthesis 페이지를 모두 링크한다.
-- 분야별 입구는 `<분야> 지도` synthesis로 두고 그 분야 guide · concept를 모두 링크한다.
+- 분야별 입구는 `<분야> 지도` synthesis로 두고 그 분야 guide · concept를 모두 링크한다. 회사 방식은 `<회사> 방식 지도`, 프로젝트 방식은 `<프로젝트> 방식 지도`(또는 방식이 2쪽 이하면 프로젝트 entity의 Connections)가 입구다.
+- 프로젝트 이름은 그 프로젝트 entity 제목의 앞부분(괄호 앞, 예: `가격인하`, `모먼트 레터`)을 쓴다.
 
 ## 2. 회사 내용
 

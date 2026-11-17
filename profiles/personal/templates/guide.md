@@ -2,7 +2,7 @@
 title: "{{title}}"
 type: guide
 guide_kind: principle   # principle(판단 기준 · 원칙) | convention(규칙 · 컨벤션 · 구조) | playbook(절차 · 방법 · 자동화)
-scope: [general]        # general | stack:<기술> | domain:<분야> | project:<이름> | area:<일 · 여행 · 생활 · 학습 …>(내 방식) | org:<회사>(그 회사에서 해 온 방식). area · org는 Evidence 필수
+scope: [general]        # general | stack:<기술> | domain:<분야> | project:<이름>(그 프로젝트에서 해 온 방식) | area:<일 · 여행 · 생활 · 학습 …>(내 방식) | org:<회사>(그 회사에서 해 온 방식). area · org · project는 Evidence 필수
 maturity: seed          # seed(한 번 본 것) | tested(Evidence의 서로 다른 곳 2개 이상) | proven(owner_checked: true일 때만)
 owner_checked: false    # 내가 "맞다"고 말했을 때만 true. 그날 log.py confirm으로 남기고 owner_checked_on에 날짜
 owner_checked_on:
