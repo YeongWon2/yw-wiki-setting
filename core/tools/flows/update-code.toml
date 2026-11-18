@@ -1,5 +1,6 @@
 # 코드 저장소 업데이트: 사이드 · 회사 프로젝트 저장소에서 무엇을 지켰고 어떻게 했는지 전부 조사해 guide로 쌓는다.
 # 저장소는 읽기만 한다(파일 · 브랜치 · 이슈 · PR에 쓰지 않음). 조사 단계 note는 찾은 것 요약(파일 경로 근거), 없으면 "없음".
+# 넣는 것은 내가 직접 한 작업뿐이다. 프론트 · 백엔드 같은 영역이 아니라 작성자(커밋 · blame)로 가른다.
 title = "코드 저장소 업데이트"
 
 [[step]]
@@ -9,7 +10,14 @@ gates = ["run?:{py} tools/version.py", "pull"]
 
 [[step]]
 id = "target"
-do = "저장소(경로 · 주소), 브랜치, 커밋 해시, 사이드/회사 여부, 프로젝트 이름(entity 제목 앞부분)을 정한다. 기존 source가 있으면 checked 이후만 본다."
+do = "저장소(경로 · 주소), 브랜치, 커밋 해시, 사이드/회사 여부, 프로젝트 이름(entity 제목 앞부분), 내 작성자 이름들(git config user.name과 그 저장소에서 쓴 별칭)을 정한다. 기존 source가 있으면 checked 이후만 본다."
+gates = ["note"]
+
+[[step]]
+id = "authors"
+do = """내 작업만 고른다. 커밋은 `git log --author=<내 이름들>`, 규칙 문서 · 설정 · 결정 기록은 `git blame --line-porcelain`으로 내가 쓴 줄만 근거로 쓴다.
+다른 담당 · 동료 · 봇이 쓴 것은 프론트든 백엔드든 넣지 않는다(영역이 아니라 작성자로 가른다). 조사 에이전트를 쓰면 이 조건을 지시에 넣는다.
+note: 내 이름들, 범위 안 내 커밋 수, 뺀 작성자와 뺀 영역(예: 백엔드 결정 중 남이 쓴 항목)."""
 gates = ["note"]
 
 [[step]]
@@ -44,7 +52,7 @@ gates = ["note"]
 
 [[step]]
 id = "candidates"
-do = """후보를 유형별 번호 목록(규칙 · 컨벤션 / 아키텍처 / 방법론 / 파이프라인 / 작성 방식 / 이력 교훈)으로 보여 주고 사용자가 고르게 한다.
+do = """후보마다 근거가 내 커밋 · 내가 쓴 줄인지 다시 확인하고(아니면 뺀다), 후보를 유형별 번호 목록(규칙 · 컨벤션 / 아키텍처 / 방법론 / 파이프라인 / 작성 방식 / 이력 교훈)으로 보여 주고 사용자가 고르게 한다.
 "다 넣어줘"면 전부. note에 사용자 답을 적는다."""
 gates = ["note"]
 
@@ -62,7 +70,7 @@ gates = ["changed:wiki/sources/"]
 [[step]]
 id = "guides"
 do = """고른 후보를 guide로: 규칙 · 아키텍처 구조 규칙 · 작성 방식은 convention, 방법론 · 파이프라인은 playbook, 설계 판단 기준은 principle.
-제목 `<프로젝트> 방식 - …`(scope project:) 또는 `<회사> 방식 - …`(scope org:) + stack: · domain:. Rules · How it was done · Evidence(파일 · 커밋 · PR) 필수.
+제목 `<프로젝트> 방식 - …`(scope project:) 또는 `<회사> 방식 - …`(scope org:) + stack: · domain:. Rules · How it was done · Evidence(파일 · 커밋 · PR) 필수. Evidence는 내 커밋 · 내가 쓴 줄만.
 무엇인가 설명은 concept, 저장소의 결정은 decision. 기존 guide는 합치기 판정(같음이면 Evidence 한 줄)."""
 gates = ["changed:wiki/guides/"]
 
@@ -88,5 +96,5 @@ gates = ["pushed"]
 
 [[step]]
 id = "report"
-do = "보고 첫 줄: 새 guide M · 보강 N. 그다음 영역별(규칙 · 아키텍처 · 방법론 · 파이프라인 · 작성 방식 · 이력)로 쓴 페이지, 못 본 곳."
+do = "보고 첫 줄: 새 guide M · 보강 N. 작성자로 뺀 것(누구의 무엇)을 한 줄로. 그다음 영역별(규칙 · 아키텍처 · 방법론 · 파이프라인 · 작성 방식 · 이력)로 쓴 페이지, 못 본 곳."
 gates = ["note"]

@@ -19,7 +19,7 @@ python3.14 tools/flow.py next                                        # 지금 �
 
 각 단계의 할 일과 검사는 `tools/flows/update.toml`에 있다. optional 단계만 `skip --note "이유"`로 넘길 수 있다.
 
-- update-code: `python3.14 tools/flow.py start update-code` — 코드 저장소(사이드 · 회사 프로젝트의 경로나 GitHub 주소)를 주면 이 흐름: 규칙 · 아키텍처 · 방법론 · 파이프라인 · 작성 방식 · 이력을 전부 조사해 `<프로젝트> 방식 - …` guide로 쌓는다. 저장소는 읽기만 한다.
+- update-code: `python3.14 tools/flow.py start update-code` — 코드 저장소(사이드 · 회사 프로젝트의 경로나 GitHub 주소)를 주면 이 흐름: 규칙 · 아키텍처 · 방법론 · 파이프라인 · 작성 방식 · 이력을 전부 조사해 `<프로젝트> 방식 - …` guide로 쌓는다. 저장소는 읽기만 하고, 내가 쓴 커밋 · 줄만 근거로 쓴다(작성자로 거른다).
 
 ## 지키는 것
 
