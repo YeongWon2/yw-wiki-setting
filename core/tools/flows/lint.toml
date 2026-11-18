@@ -1,0 +1,44 @@
+# 점검: check.py로 보고, 기계적인 것은 고치고, 판단할 것은 review/로.
+title = "점검"
+
+[[step]]
+id = "start"
+do = "최신 확인과 원격 받기."
+gates = ["run?:{py} tools/version.py", "pull"]
+
+[[step]]
+id = "scan"
+do = "점검 결과를 본다(무엇을 보는지는 tools/check.py 맨 위 설명). note에 오류 · 경고 수."
+gates = ["run?:{py} tools/check.py", "note"]
+
+[[step]]
+id = "fix"
+do = """묻지 않고 고친다: index 최신화, frontmatter 빠진 필드 · 날짜 형식, 빠진 템플릿 제목, 후보가 하나뿐인 깨진 링크, Key facts 12개 초과 나누기.
+guide끼리 겹치면 합치기 판정대로 직접 합치고 `log.py merge`. 없으면 note에 '없음'."""
+gates = ["note"]
+
+[[step]]
+id = "review-items"
+do = """위키는 고치지 않고 review/에 남긴다(found_by: lint, 같은 항목 있으면 새로 안 만듦): 페이지끼리 다른 사실, 낡은 주장, 오래된 proposed,
+같은 이름 후보, 대상이 둘 이상인 깨진 링크, 유형 옮기기 후보, raw/ 고친 흔적. 고아 · seed · 미확인 수는 경고로만. 없으면 '없음'."""
+gates = ["note"]
+
+[[step]]
+id = "recheck"
+do = "점검 오류 0까지 고친다."
+gates = ["check"]
+
+[[step]]
+id = "log"
+do = "`python3.14 tools/log.py lint \"<요약>\" \"고침 N\" \"review K\"`"
+gates = ["run:{py} tools/index.py", "log:lint"]
+
+[[step]]
+id = "push"
+do = "커밋하고 push한다."
+gates = ["pushed"]
+
+[[step]]
+id = "report"
+do = "보고 첫 줄: 오류 N → 0, 고침 M, review K. 페이지 삭제 · archived · 히스토리 재작성은 묻고 한다."
+gates = ["note"]

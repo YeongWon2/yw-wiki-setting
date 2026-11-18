@@ -56,7 +56,9 @@ review/           사람 검토 대기열. 위키에 넣지 않은 충돌 · 미
 | 찾기 | `yw-wiki-query` | index → 관련 entity · synthesis → 세부 페이지 순으로 읽고 근거 링크로 답한다. 다시 쓸 만한 답은 synthesis로 저장 |
 | 점검 | `yw-wiki-lint` | `tools/check.py` 실행. 기계적인 것은 고치고, 모순 · 낡은 주장 · 고아 페이지는 `review/`로 |
 
-모든 작업 뒤 `python3.14 tools/log.py <작업> <제목>`으로 log에 한 줄 남기고, 페이지가 늘거나 줄면 `python3.14 tools/index.py`로 index를 다시 만든다.
+**흐름 하네스:** 업데이트 · 찾기 · 검토 · 점검은 `python3.14 tools/flow.py start <update|update-code|query|review|lint>`로 시작하고, 단계마다 `flow.py done --note "…"`로 검사를 통과해야 다음 단계로 간다. 단계와 검사는 `tools/flows/*.toml`에 있고, log · index · check · push까지 흐름이 챙긴다.
+
+규칙 문서(AGENTS.md · SKILL.md · 흐름 파일)는 하나당 200줄 이하로, 작은 단위로 나눠 쓴다. 길어지면 흐름 단계나 별도 스킬로 옮긴다.
 
 ## 4. 사람이 개입하는 경우
 

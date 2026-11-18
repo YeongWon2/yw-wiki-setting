@@ -1,0 +1,92 @@
+# 코드 저장소 업데이트: 사이드 · 회사 프로젝트 저장소에서 무엇을 지켰고 어떻게 했는지 전부 조사해 guide로 쌓는다.
+# 저장소는 읽기만 한다(파일 · 브랜치 · 이슈 · PR에 쓰지 않음). 조사 단계 note는 찾은 것 요약(파일 경로 근거), 없으면 "없음".
+title = "코드 저장소 업데이트"
+
+[[step]]
+id = "start"
+do = "최신 확인과 원격 받기. ⚠가 보이면 사람에게 먼저 알린다."
+gates = ["run?:{py} tools/version.py", "pull"]
+
+[[step]]
+id = "target"
+do = "저장소(경로 · 주소), 브랜치, 커밋 해시, 사이드/회사 여부, 프로젝트 이름(entity 제목 앞부분)을 정한다. 기존 source가 있으면 checked 이후만 본다."
+gates = ["note"]
+
+[[step]]
+id = "rules"
+do = "규칙 · 컨벤션: 린트 · 포맷 · tsconfig 같은 설정, 폴더 · import 경계, 이름 짓기, 에러 처리 · 로깅 · 보안 규칙, 저장소 안 CLAUDE.md · AGENTS.md · 기여 안내 · 스킬 · 훅."
+gates = ["note"]
+
+[[step]]
+id = "architecture"
+do = "아키텍처: 디렉터리 · 레이어 구조, 패키지 · 모듈 경계, 프론트 · 백엔드 계약(API 타입 · 스키마 · enum), 상태 · 데이터 흐름, 인증 · 결제 · 저장소 같은 외부 연동, 설계 판단과 이유."
+gates = ["note"]
+
+[[step]]
+id = "methodology"
+do = "방법론: 개발 방식(TDD · 스펙 먼저 · 모듈 파이프라인 등), 기획 → 스펙 → 구현 → 검증 흐름, AI 에이전트 활용(스킬 · 하네스 · 세션 규칙), 결정 · 진행 기록 쓰는 방식."
+gates = ["note"]
+
+[[step]]
+id = "pipeline"
+do = "파이프라인: 빌드 · 테스트 · 검사 스크립트(package.json scripts 등), 커밋 전 훅, CI · CD · 배포 · 릴리스, 테스트 구성(단위 · 통합 · E2E · 성능 상한), 브랜치 전략."
+gates = ["note"]
+
+[[step]]
+id = "writing"
+do = "작성 방식: 코드 스타일(주석 · 함수 크기 · 타입), 문서 · README · 결정 기록의 문체와 틀, 커밋 메시지 · PR 본문 · 브랜치 이름 형식, 화면 문구 규칙."
+gates = ["note"]
+
+[[step]]
+id = "history"
+do = "이력: git log와 PR 본문에서 작업 순서, 시도했다 되돌린 것과 이유, 검증한 방법, 중간에 바뀐 판단."
+gates = ["note"]
+
+[[step]]
+id = "candidates"
+do = """후보를 유형별 번호 목록(규칙 · 컨벤션 / 아키텍처 / 방법론 / 파이프라인 / 작성 방식 / 이력 교훈)으로 보여 주고 사용자가 고르게 한다.
+"다 넣어줘"면 전부. note에 사용자 답을 적는다."""
+gates = ["note"]
+
+[[step]]
+id = "company-strip"
+optional = true
+do = "회사 저장소면 저장소 · 제품 · 고객 · 동료 이름, 내부 URL, 수치 · 보안 설정 · 비밀값을 걷어 낸 문장을 보여 주고 확인받는다. 사이드 프로젝트면 skip."
+gates = ["note"]
+
+[[step]]
+id = "source"
+do = "저장소 스냅숏 source 하나(source_kind: github, 브랜치 · 커밋 해시를 Sources에)."
+gates = ["changed:wiki/sources/"]
+
+[[step]]
+id = "guides"
+do = """고른 후보를 guide로: 규칙 · 아키텍처 구조 규칙 · 작성 방식은 convention, 방법론 · 파이프라인은 playbook, 설계 판단 기준은 principle.
+제목 `<프로젝트> 방식 - …`(scope project:) 또는 `<회사> 방식 - …`(scope org:) + stack: · domain:. Rules · How it was done · Evidence(파일 · 커밋 · PR) 필수.
+무엇인가 설명은 concept, 저장소의 결정은 decision. 기존 guide는 합치기 판정(같음이면 Evidence 한 줄)."""
+gates = ["changed:wiki/guides/"]
+
+[[step]]
+id = "map"
+do = "`<프로젝트> 방식 지도` · `<회사> 방식 지도` synthesis(없으면 템플릿으로)와 프로젝트 entity Connections에 새 guide를 링크한다."
+gates = ["changed:wiki/synthesis/"]
+
+[[step]]
+id = "index-log"
+do = "`python3.14 tools/log.py update \"<프로젝트> 저장소 (<커밋>)\" \"source N\" \"새 guide M\" \"같음 N\" \"보강 N\" \"범위 N\" \"합침 N\" \"모순 N\"`"
+gates = ["run:{py} tools/index.py", "log:update"]
+
+[[step]]
+id = "check"
+do = "점검 오류 0까지 고친다(guide Evidence · How it was done · 식별 정보)."
+gates = ["check"]
+
+[[step]]
+id = "push"
+do = "커밋하고 push한다(main)."
+gates = ["pushed"]
+
+[[step]]
+id = "report"
+do = "보고 첫 줄: 새 guide M · 보강 N. 그다음 영역별(규칙 · 아키텍처 · 방법론 · 파이프라인 · 작성 방식 · 이력)로 쓴 페이지, 못 본 곳."
+gates = ["note"]

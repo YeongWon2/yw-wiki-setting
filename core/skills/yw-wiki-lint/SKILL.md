@@ -5,35 +5,17 @@ description: "[{{wiki_name}}] 위키를 점검하고 고친다(lint). tools/chec
 
 # yw-wiki-lint — 점검 ({{wiki_name}})
 
-## 1. 점검
+`tools/check.py`로 보고, 기계적인 것은 묻지 않고 고치며, 판단할 것은 `review/`에 남긴다. `maturity` · `owner_checked`는 lint가 올리거나 내리지 않는다.
 
-`python3.14 tools/version.py` (main · 원격 · 세팅 · 플러그인 최신 확인, ⚠면 먼저 알림) 뒤 `git pull --rebase` 뒤 `python3.14 tools/check.py`. 무엇을 보는지는 그 파일 맨 위 설명에 있다. 커밋할 때 `.githooks/pre-commit`이 같은 점검을 한다.
+## 흐름 (하네스)
 
-## 2. 바로 고치는 것 (묻지 않음)
+단계는 `tools/flow.py`가 하나씩 안내하고, 검사를 통과해야 다음으로 넘긴다. 단계를 건너뛰거나 순서를 바꾸지 않는다.
 
-- index가 최신이 아님 → `python3.14 tools/index.py`.
-- frontmatter 형식: 빠진 공통 필드 추가, 날짜 형식, `updated`.
-- 템플릿 제목이 빠짐 → 템플릿 제목 그대로 빈 칸을 넣는다.
-- 깨진 링크 중 대상 후보가 하나뿐인 것(이름 오타, 이름이 바뀐 페이지).
-- Key facts가 12개를 넘음 → 주제별로 페이지를 나누고 서로 링크한다.
+```sh
+python3.14 tools/flow.py start lint
+python3.14 tools/flow.py done --note "<이 단계에서 한 일 · 사용자 답>"   # 검사 실패면 고치고 다시
+python3.14 tools/flow.py next                                        # 지금 단계 다시 보기
+```
 
-## 2-1. 직접 합치는 것 (guide, 묻지 않음)
+각 단계의 할 일과 검사는 `tools/flows/lint.toml`에 있다. optional 단계만 `skip --note "이유"`로 넘길 수 있다.
 
-guide(내 방식 · 원칙 · 회사 방식 · 레퍼런스)끼리 겹치거나 어긋나면 AGENTS.md profile의 합치기 판정(guide끼리 겹침)대로 직접 정한다: 남길 페이지에 내용 · Evidence를 모으고, 없앨 페이지는 `status: superseded` · `superseded_by`, 이유는 남긴 페이지 Key facts 한 줄과 `python3.14 tools/log.py merge "<남긴 페이지>" "없앤 쪽: …" "이유: …"`.
-
-## 3. review/에 남기는 것
-
-위키 페이지는 고치지 않고 항목마다 `review/`에 review 템플릿(`found_by: lint`)으로 남긴다. 이미 같은 항목이 있으면 새로 만들지 않는다. 정하는 것은 [yw-wiki-review](../yw-wiki-review/SKILL.md)다.
-
-- 페이지끼리 사실이 다름, 원본이 바뀌어 낡은 주장, 오래된 proposed 결정.
-- guide가 아닌 페이지의 같은 이름 후보 · 이름이 거의 같은 페이지(check.py 중복 후보 경고), 대상이 둘 이상인 깨진 링크.
-- guide인데 내용이 "무엇인가"뿐이거나 concept인데 규칙 · 절차뿐인 것(유형 옮기기 후보).
-- `raw/` 파일을 고치거나 지운 흔적 (되돌릴지).
-
-고아 페이지 · 오래된 seed guide · 미확인 guide 수는 review/에 남기지 않고 경고로만 보고한다. `maturity` · `owner_checked`를 lint가 올리거나 내리지 않는다.
-
-**묻고 하는 것:** 페이지 삭제, `status` 를 archived로 바꾸기(사용자가 끝났다고 말한 것은 바로), 히스토리 재작성.
-
-## 4. 마무리
-
-`python3.14 tools/check.py` 오류 0 확인 → `python3.14 tools/log.py lint "<요약>" "고침 N" "review K"` → 커밋 · push. 보고 첫 줄은 "오류 N → 0, 고침 M, review K".
