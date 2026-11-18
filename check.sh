@@ -4,6 +4,16 @@ set -eu
 SETTING=$(cd "$(dirname "$0")" && pwd)
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
+# 이 폴더 대신 원격 없는 임시 사본으로 시험한다. 길잡이(wiki-setting)는 세팅 사본을 최신 릴리스 태그로
+# checkout하므로, 이 폴더를 그대로 쓰면 작업 중인 브랜치가 옛 태그로 옮겨진다(v2.13.0 · v2.13.1이 그렇게 나갔다).
+SRC="$SETTING"
+git clone -q "$SRC" "$TMP/setting" && git -C "$TMP/setting" remote remove origin
+cp "$SRC"/VERSION "$TMP/setting/VERSION"
+for f in $(git -C "$SRC" -c core.quotepath=false diff --name-only --diff-filter=d HEAD; git -C "$SRC" -c core.quotepath=false ls-files --others --exclude-standard); do
+  mkdir -p "$TMP/setting/$(dirname "$f")"; cp "$SRC/$f" "$TMP/setting/$f"   # 커밋 전 변경도 시험한다
+done
+for f in $(git -C "$SRC" -c core.quotepath=false diff --name-only --diff-filter=D HEAD); do rm -f "$TMP/setting/$f"; done   # 커밋 전 삭제도
+SETTING="$TMP/setting"
 export HOME="$TMP/home" YW_TODAY=2026-10-28 YW_NO_NETWORK=1
 mkdir -p "$HOME"
 git config --global user.name check >/dev/null 2>&1 || true
