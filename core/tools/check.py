@@ -28,7 +28,7 @@
 - proposed 결정이 PROPOSAL_DAYS일 넘음
 - review/에 pending 항목이 있다 (yw-wiki-review로 정한다) · REVIEW_DAYS일 넘은 pending
 - 이름이 거의 같은 페이지(공백 · 기호 · 대소문자만 다름) · 별칭이 다른 페이지 이름과 같음 (중복 후보)
-- guide가 seed인 채 SEED_DAYS일 넘게 고치지 않음 · 내가 확인하지 않은 guide 수 (owner_checked: false)
+- guide가 seed인 채 SEED_DAYS일 넘게 고치지 않음 · 내가 확인하지 않은 guide 수 (owner_checked: false, superseded · archived 제외)
 오늘 날짜는 YW_TODAY(YYYY-MM-DD)로 바꿔 볼 수 있다.
   python3.14 tools/check.py [위키 경로]
 """
@@ -156,7 +156,8 @@ def check_guide(rel, path, meta, body, log_text, now, errors, warnings):
     updated = parse_date(meta.get("updated", ""))
     if maturity == "seed" and updated and now - updated > timedelta(days=SEED_DAYS):
         warnings.append(f"{rel}: guide가 seed인 채 {SEED_DAYS}일 넘게 그대로 (updated {updated})")
-    return owner == "true"
+    # 대체 · 보관된 guide는 더 쓰지 않으므로 "확인하지 않은 guide" 수에 넣지 않는다
+    return owner == "true" or meta.get("status") in ("superseded", "archived")
 
 
 def norm(name):
