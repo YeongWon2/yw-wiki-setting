@@ -32,11 +32,13 @@ for src in "$PERSONAL"; do
   name=$(basename "$src")
   # 원격 흉내: bare 저장소 하나와 복사본 둘(A: 내 PC, B: 다른 기기)
   git clone -q --bare "$src" "$TMP/$name.git"
-  # 원격 main = 지금 보는 커밋 (병합 전 브랜치도 병합 뒤 모습으로 시험)
-  git -C "$TMP/$name.git" branch -f main "$(git -C "$src" rev-parse HEAD)"
-  git -C "$TMP/$name.git" symbolic-ref HEAD refs/heads/main
-  git clone -q "$TMP/$name.git" "$TMP/$name-A"; git clone -q "$TMP/$name.git" "$TMP/$name-B"
   A="$TMP/$name-A"; B="$TMP/$name-B"
+  # 원격 main = 지금 보는 커밋 (병합 전 브랜치도 병합 뒤 모습으로 시험).
+  # bare 저장소는 직접 만지지 않고(safe.bareRepository=explicit에서 막힘) 복사본으로 받아 push한다
+  git clone -q "$TMP/$name.git" "$A"
+  git -C "$A" push -q -f origin "$(git -C "$src" rev-parse HEAD):refs/heads/main"
+  git -C "$A" fetch -q origin && git -C "$A" checkout -q -B main origin/main
+  git clone -q -b main "$TMP/$name.git" "$B"
   "$PY" "$WS" register "$A" >/dev/null
   for W in "$A" "$B"; do
     git -C "$W" checkout -q main 2>/dev/null || git -C "$W" checkout -q -b main
