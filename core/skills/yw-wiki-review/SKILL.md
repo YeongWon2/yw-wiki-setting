@@ -5,27 +5,17 @@ description: "[{{wiki_name}}] 사람 검토 대기열(review/)을 보여 주고,
 
 # yw-wiki-review — 사람 검토 ({{wiki_name}})
 
-위키(`wiki/`)에는 충돌 · 미정 내용을 넣지 않는다. 그런 항목은 `review/`에 파일 하나씩 쌓이고, 여기서 사람이 정한 것만 위키에 들어간다.
+위키(`wiki/`)에는 충돌 · 미정 내용을 넣지 않는다. 그런 항목은 `review/`에 파일 하나씩 쌓이고, 여기서 사람이 정한 것만 위키에 들어간다. 정하지 않은 것은 그대로 두고, 이미 정한 것은 다시 묻지 않는다.
 
-## 1. 보여 주기
+## 흐름 (하네스)
 
-1. `python3.14 tools/version.py` (main · 원격 · 세팅 · 플러그인 최신 확인, ⚠면 먼저 알림) 뒤 `git pull --rebase`.
-2. `review/*.md` 중 `status: pending`을 오래된 순으로 읽는다. 대상 페이지(`page`)와 근거 원본도 연다. 원본이 그 사이 바뀌었으면 최신 내용으로 다시 맞춘다.
-3. 사용자가 "guide 확인하자"고 하면 `owner_checked: false`인 guide를 `maturity` 높은 순으로 Rules만 보여 준다.
-4. 첫 줄에 "검토할 것 N개". 그다음 번호 목록으로 한 번에 보여 준다: 무엇을 정하나 · 지금 위키 · 새 원본 · 각 근거와 날짜 · 선택지. 쉬운 말로, 판단에 필요한 만큼만.
+단계는 `tools/flow.py`가 하나씩 안내하고, 검사를 통과해야 다음으로 넘긴다. 단계를 건너뛰거나 순서를 바꾸지 않는다.
 
-## 2. 정하기
+```sh
+python3.14 tools/flow.py start review
+python3.14 tools/flow.py done --note "<이 단계에서 한 일 · 사용자 답>"   # 검사 실패면 고치고 다시
+python3.14 tools/flow.py next                                        # 지금 단계 다시 보기
+```
 
-- 사용자가 정한 번호만 처리한다. 정하지 않은 것은 그대로 둔다. 이미 정한 것은 다시 묻지 않는다.
-- "보류"는 그대로 두고, "버림"은 반영 없이 항목만 지운다.
-- 사용자의 말 원문을 항목의 `## Decision`에 적는다.
-- guide를 "맞다"고 한 것: `owner_checked: true` · `owner_checked_on: <오늘>` · `python3.14 tools/log.py confirm "<페이지>" "<사용자 말 원문>"`. "고쳐"라고 한 것은 고친 뒤 같은 절차. 확인 없이 올리면 check.py가 막는다.
+각 단계의 할 일과 검사는 `tools/flows/review.toml`에 있다. optional 단계만 `skip --note "이유"`로 넘길 수 있다.
 
-## 3. 반영
-
-- 정한 내용을 템플릿 형식으로 위키 페이지에 쓴다: Key facts · Timeline 고치기, 결정이면 새 decision(`accepted`)과 이전 결정 `superseded`, 페이지 나누기 · 합치기 · `status: archived`.
-- 결정의 근거로 남길 가치가 있으면 decision 페이지로 남긴다(예: 원본끼리 다른 것을 이렇게 정했다).
-- 반영한 항목 파일은 지운다(기록은 log와 git에 남는다).
-- `python3.14 tools/index.py` → `python3.14 tools/log.py review "<요약>" "정함 N" "보류 M" "버림 K"` → `python3.14 tools/check.py` → 커밋 · push.
-
-보고 첫 줄: "정함 N · 보류 M · 버림 K, 남은 검토 R".

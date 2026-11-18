@@ -106,6 +106,29 @@ $EV2/" -e 's/^maturity:.*/maturity: tested/'; expect ok "" "곳 둘인 tested가
   grep -q "검토 대기 1개" "$TMP/out" || fail "$p review 대기 경고 없음"
   [ "$(ls "$W/.claude/skills" | wc -l | tr -d ' ')" = 5 ] && [ -f "$W/.claude/skills/yw-wiki-sync/SKILL.md" ] || fail "$p 스킬 5개 아님"
 
+  # 규칙 문서는 하나당 200줄 이하
+  for f in "$W/AGENTS.md" "$W"/.claude/skills/*/SKILL.md "$W"/tools/flows/*.toml; do
+    [ "$(wc -l < "$f")" -le 200 ] || fail "$p 규칙 문서 200줄 넘음: $f"
+  done
+  # 흐름 하네스: 검사를 통과해야 다음 단계로, optional만 건너뛴다
+  flow() { "$PY" "$W/tools/flow.py" "$W" "$@" > "$TMP/flow" 2>&1; }
+  [ "$(ls "$W/tools/flows" | wc -l | tr -d ' ')" = 5 ] || fail "$p 흐름 5개 아님"
+  flow next && fail "$p 시작 전 next가 통과"
+  flow start lint && flow done || { cat "$TMP/flow"; fail "$p 흐름 start 단계"; }
+  flow done && fail "$p note 없이 다음 단계로 감"
+  flow done --note "오류 0" && flow done --note "없음" && flow done --note "없음" && flow done || { cat "$TMP/flow"; fail "$p lint 흐름 중간"; }
+  flow done && fail "$p log 없이 log 단계 통과"
+  (cd "$W" && "$PY" tools/log.py lint "흐름 시험" "고침 0" >/dev/null)
+  flow done || { cat "$TMP/flow"; fail "$p log 뒤에도 log 단계 실패"; }
+  flow done && fail "$p 커밋 안 했는데 push 단계 통과"
+  flow skip --note "x" && fail "$p optional 아닌 단계를 건너뜀"
+  flow start query && flow done && flow done --note "index" && flow done --note "페이지" && flow done --note "답" || { cat "$TMP/flow"; fail "$p query 흐름"; }
+  flow done && fail "$p synthesis를 안 바꿨는데 저장 단계 통과"
+  flow skip --note "한 번 묻고 끝" || fail "$p optional 단계 skip"
+  grep -q "push" "$TMP/flow" || fail "$p skip 뒤 다음 단계 안내 없음"
+  flow abort && [ ! -f "$W/.yw-wiki/flow.json" ] || fail "$p abort"
+  git -C "$W" check-ignore -q .yw-wiki/flow.json || fail "$p 흐름 상태가 git에 올라감"
+
   # 업그레이드: 바뀐 게 없으면 최신, 관리 파일을 망가뜨리면 되돌리고 local 구간은 남긴다
   "$PY" "$SETTING/scripts/upgrade.py" "$W" | grep -q "최신" || fail "$p upgrade 멱등"
   echo "# 망가뜨림" >> "$W/tools/check.py"

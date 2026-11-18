@@ -1,0 +1,51 @@
+# 업데이트: 원본(자료 · 대화 · raw/)을 위키에 반영. 코드 저장소는 update-code.
+title = "업데이트"
+
+[[step]]
+id = "start"
+do = "최신 확인과 원격 받기. ⚠가 보이면 사람에게 먼저 알린다."
+gates = ["run?:{py} tools/version.py", "pull"]
+
+[[step]]
+id = "scope"
+do = """범위를 정한다: 사용자가 준 자료 · 링크 · 대화, 또는 source가 없는 raw/ 파일.
+코드 저장소면 `flow.py start update-code`로 바꾼다. 다른 프로젝트 세션이면 후보를 유형별 번호 목록으로 보여 주고 고른 것만.
+회사 자료는 AGENTS.md profile 회사 내용 표대로 걷어 낼 문장을 먼저 보여 준다."""
+gates = ["note"]
+
+[[step]]
+id = "source"
+do = "원본 하나당 wiki/sources/에 source 템플릿으로 요약. 이미 있으면 checked 이후 바뀐 것만 고치고 checked를 오늘로."
+gates = ["changed:wiki/sources/"]
+
+[[step]]
+id = "merge"
+do = """지식마다 index · 제목 · aliases로 기존 페이지를 먼저 찾고 AGENTS.md profile 합치기 판정을 고른다.
+같음 → guide Evidence 한 줄 · 보강/범위 → 기존 페이지 · guide 겹침 → 직접 합치고 log.py merge · 사실 모순/같은 이름 → review/.
+내가 한 일이면 '내 방식' guide부터 본다. note에 판정 개수를 적는다(같음 N 보강 N 범위 N 합침 N 모순 N)."""
+gates = ["note"]
+
+[[step]]
+id = "neighbors"
+do = "새로 · 크게 바뀐 페이지와 연결된 페이지의 Connections · 요약을 고치고, 고친 페이지 updated를 오늘로."
+gates = ["note"]
+
+[[step]]
+id = "index-log"
+do = "`python3.14 tools/log.py update \"<제목>\" \"source N\" \"새 페이지 M\" \"같음 N\" \"보강 N\" \"범위 N\" \"합침 N\" \"모순 N\"`"
+gates = ["run:{py} tools/index.py", "log:update"]
+
+[[step]]
+id = "check"
+do = "점검 오류 0까지 고친다."
+gates = ["check"]
+
+[[step]]
+id = "push"
+do = "커밋하고 push한다(main). rebase 충돌이면 멈추고 사람에게."
+gates = ["pushed"]
+
+[[step]]
+id = "report"
+do = "보고 첫 줄: source N · 새 페이지 M · 판정 개수. 그다음 새 · 고친 페이지, review/에 남긴 것, 못 읽은 곳. review가 생겼으면 yw-wiki-review를 권한다."
+gates = ["note"]
