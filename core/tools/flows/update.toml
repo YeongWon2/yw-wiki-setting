@@ -21,7 +21,8 @@ gates = ["changed:wiki/sources/"]
 [[step]]
 id = "merge"
 do = """지식마다 index · 제목 · aliases로 기존 페이지를 먼저 찾고 AGENTS.md profile 합치기 판정을 고른다.
-같음 → guide Evidence 한 줄 · 보강/범위 → 기존 페이지 · guide 겹침 → 직접 합치고 log.py merge · 사실 모순/같은 이름 → review/.
+제목만이 아니라 본문(Rules)도 대조한다. 같음 → guide Evidence 한 줄 · 보강/범위 → 기존 페이지 · guide 중복 → 직접 합치고 log.py merge ·
+guide 충돌 → review/에 병합 초안 · 사실 모순/같은 이름 → review/.
 내가 한 일이면 '내 방식' guide부터 본다. note에 판정 개수를 적는다(같음 N 보강 N 범위 N 합침 N 모순 N)."""
 gates = ["note"]
 
