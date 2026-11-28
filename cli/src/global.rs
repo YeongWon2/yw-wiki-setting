@@ -52,33 +52,43 @@ fn jstr(s: &str) -> String {
     serde_json::to_string(s).unwrap()
 }
 
+/// TOML 키: 안전한 이름은 그대로, 아니면 따옴표
+fn key(k: &str) -> String {
+    if safe_id(k) { k.to_string() } else { jstr(k) }
+}
+
+/// 볼트 id는 영문 · 숫자 · _ · -만
+fn safe_id(k: &str) -> bool {
+    !k.is_empty() && k.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+}
+
 fn dump(conf: &Table) -> String {
     let mut lines = vec![
         "# 이 PC의 LLM 위키 볼트 목록. wiki-setting이 관리한다. 이름 · 별칭 · 설명은 각 위키 wiki.toml, 여기 적으면 여기 값이 먼저.".to_string(),
         format!("version = {}", conf.get("version").and_then(|v| v.as_integer()).unwrap_or(1)),
     ];
     if let Some(d) = conf.get("default").and_then(|v| v.as_str()).filter(|s| !s.is_empty()) {
-        lines.push(format!("default = \"{d}\""));
+        lines.push(format!("default = {}", jstr(d)));
     }
     if let Some(s) = conf.get("setting").and_then(|v| v.as_table()).filter(|s| !s.is_empty()) {
         lines.push(String::new());
         lines.push("[setting]".into());
         for (k, v) in s {
-            lines.push(format!("{k} = \"{}\"", v.as_str().map(String::from).unwrap_or_else(|| v.to_string())));
+            lines.push(format!("{} = {}", key(k), jstr(&v.as_str().map(String::from).unwrap_or_else(|| v.to_string()))));
         }
     }
     if let Some(vs) = conf.get("vaults").and_then(|v| v.as_table()) {
         for (vid, v) in vs {
             let v = v.as_table().cloned().unwrap_or_default();
             lines.push(String::new());
-            lines.push(format!("[vaults.{vid}]"));
-            lines.push(format!("path = \"{}\"", v.get("path").and_then(|x| x.as_str()).unwrap_or("")));
+            lines.push(format!("[vaults.{}]", key(vid)));
+            lines.push(format!("path = {}", jstr(v.get("path").and_then(|x| x.as_str()).unwrap_or(""))));
             if v.get("readonly").and_then(|x| x.as_bool()).unwrap_or(false) {
                 lines.push("readonly = true".into());
             }
             // 이 PC의 Obsidian 볼트 id. 위키 폴더가 옮겨져도 같은 볼트를 따라간다
             if let Some(x) = v.get("obsidian_id").and_then(|x| x.as_str()).filter(|s| !s.is_empty()) {
-                lines.push(format!("obsidian_id = \"{x}\""));
+                lines.push(format!("obsidian_id = {}", jstr(x)));
             }
             // Obsidian 볼트가 위키의 몇 단계 위 폴더인가
             if let Some(x) = v.get("obsidian_depth").and_then(|x| x.as_integer()).filter(|d| *d != 0) {
@@ -86,7 +96,7 @@ fn dump(conf: &Table) -> String {
             }
             // 경로를 고치기 전 위치. Obsidian 볼트를 맞추면 지운다
             if let Some(x) = v.get("previous_path").and_then(|x| x.as_str()).filter(|s| !s.is_empty()) {
-                lines.push(format!("previous_path = \"{x}\""));
+                lines.push(format!("previous_path = {}", jstr(x)));
             }
             for k in VAULT_META {
                 match v.get(*k) {
@@ -586,6 +596,9 @@ fn register(folder: &str, id: Option<String>, readonly: bool, meta: Vec<(&str, t
     let Some(vid) = id.or_else(|| w.get("id").and_then(|x| x.as_str()).map(String::from)) else {
         wiki::fail(&format!("{}에 wiki.toml [wiki] id가 없다 — --id로 정한다", short(&path)));
     };
+    if !safe_id(&vid) {
+        wiki::fail(&format!("볼트 id '{vid}'는 영문 · 숫자 · _ · -만 쓴다"));
+    }
     let mut conf = load();
     let prev = vaults(&conf).get(&vid).and_then(|v| v.as_table()).cloned().unwrap_or_default();
     let mut entry = Table::new();

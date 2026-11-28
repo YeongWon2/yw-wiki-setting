@@ -55,6 +55,17 @@ fn copy(src: &Path, dest: &Path) -> Result<(), String> {
     std::fs::copy(src, dest).map(|_| ()).map_err(|e| format!("{}: {e}", src.display()))
 }
 
+/// 플러그인 목록 값이 경로를 벗어나지 않는 이름인가
+fn safe_name(s: &str) -> bool {
+    !s.is_empty() && s != "." && s != ".." && s.chars().all(|c| c.is_ascii_alphanumeric() || "._-".contains(c))
+}
+
+const FILES: &[&str] = &["main.js", "manifest.json", "styles.css"];
+
+fn safe_repo(s: &str) -> bool {
+    matches!(s.split_once('/'), Some((o, r)) if safe_name(o) && safe_name(r))
+}
+
 /// (출력 줄, 종료 코드)
 pub fn run(root: &Path, check: bool) -> (Vec<String>, i32) {
     let here = root.join("tools").join("obsidian");
@@ -81,9 +92,17 @@ pub fn run(root: &Path, check: bool) -> (Vec<String>, i32) {
         let dest = obs.join("plugins").join(pid);
         let version = p.get("version").and_then(|v| v.as_str()).unwrap_or("");
         let repo = p.get("repo").and_then(|v| v.as_str()).unwrap_or("");
+        if !safe_name(pid) || !safe_name(version) || !safe_repo(repo) {
+            problems.push(format!("  설치 못 함: plugins.toml의 {pid} 값(id · version · repo)이 허용 형식이 아님"));
+            continue;
+        }
         if let Some(shas) = p.get("sha256").and_then(|s| s.as_table()) {
             for (name, want) in shas {
                 let want = want.as_str().unwrap_or("");
+                if !FILES.contains(&name.as_str()) {
+                    problems.push(format!("  설치 못 함: {pid}의 파일 {name}은 받지 않는다 ({} 만)", FILES.join(" · ")));
+                    continue;
+                }
                 let f = dest.join(name);
                 if f.exists() && sha(&f) == want {
                     continue;
@@ -99,7 +118,7 @@ pub fn run(root: &Path, check: bool) -> (Vec<String>, i32) {
             }
         }
         if let Some(d) = p.get("defaults").and_then(|v| v.as_str()) {
-            if !d.is_empty() && !dest.join("data.json").exists() {
+            if !d.is_empty() && safe_name(d) && !dest.join("data.json").exists() {
                 problems.push(format!("{pid}: 기본 설정 없음"));
                 if !check {
                     if let Err(e) = copy(&here.join("defaults").join(d), &dest.join("data.json")) {

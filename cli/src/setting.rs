@@ -143,6 +143,14 @@ impl Managed {
     }
 }
 
+/// .wiki-setting.toml의 managed 항목이 세팅이 관리하는 자리 안의 상대 경로인가 (`..` · 절대 경로는 지우지 않는다)
+fn safe_managed(rel: &str) -> bool {
+    let p = Path::new(rel);
+    let plain = p.components().all(|c| matches!(c, std::path::Component::Normal(_)));
+    let inside = ["tools/", "_templates/", ".claude/", ".githooks/"].iter().any(|d| rel.starts_with(d)) || rel == "README.md";
+    plain && inside
+}
+
 fn executable(rel: &str) -> bool {
     rel.starts_with(".githooks/") || (rel.starts_with("tools/") && !rel[6..].contains('/') && rel.ends_with(".py"))
 }
@@ -321,7 +329,10 @@ pub fn upgrade(sdir: &Path, dest: &Path, dry_run: bool, yes: bool) -> (Vec<Strin
         .and_then(|v| v.as_array())
         .map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect())
         .unwrap_or_default();
-    let removed: Vec<String> = old_managed.into_iter().filter(|rel| !managed.iter().any(|(m, _)| m == rel) && dest.join(rel).exists()).collect();
+    let removed: Vec<String> = old_managed
+        .into_iter()
+        .filter(|rel| safe_managed(rel) && !managed.iter().any(|(m, _)| m == rel) && dest.join(rel).exists())
+        .collect();
     let agents_old = wiki::read(&dest.join("AGENTS.md"));
     let agents_new = agents(sdir, &profile, local_section(&agents_old));
     if agents_new != agents_old {
