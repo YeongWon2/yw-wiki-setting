@@ -14,8 +14,8 @@
 
 ```text
 wiki/
-  index.md        모든 페이지 목록. 질문 때 가장 먼저 읽는다 (tools/index.py가 만든다)
-  log.md          작업 기록. 추가만 한다 (tools/log.py)
+  index.md        모든 페이지 목록. 질문 때 가장 먼저 읽는다 (`yw-wiki index`가 만든다)
+  log.md          작업 기록. 추가만 한다 (`yw-wiki log`)
   entities/       사람(people) · 조직(orgs) · 프로젝트(projects). 종류는 wiki.toml [entities]
   concepts/       개념 · 방법 · 체크리스트
   sources/        원본 하나당 요약 하나
@@ -54,9 +54,11 @@ review/           사람 검토 대기열. 위키에 넣지 않은 충돌 · 미
 | 업데이트 | `yw-wiki-update` | 원본을 읽고 source 요약 → 관련 entity · concept · decision 갱신 → 이웃 페이지의 Connections · 요약 갱신 → index · log |
 | 검토 | `yw-wiki-review` | `review/`의 항목을 사람에게 보여 주고 정한 것만 위키에 반영 |
 | 찾기 | `yw-wiki-query` | index → 관련 entity · synthesis → 세부 페이지 순으로 읽고 근거 링크로 답한다. 다시 쓸 만한 답은 synthesis로 저장 |
-| 점검 | `yw-wiki-lint` | `tools/check.py` 실행. 기계적인 것은 고치고, 모순 · 낡은 주장 · 고아 페이지는 `review/`로 |
+| 점검 | `yw-wiki-lint` | `yw-wiki check` 실행. 기계적인 것은 고치고, 모순 · 낡은 주장 · 고아 페이지는 `review/`로 |
 
-**흐름 하네스:** 업데이트 · 찾기 · 검토 · 점검은 `python3.14 tools/flow.py start <update|update-code|query|review|lint>`로 시작하고, 단계마다 `flow.py done --note "…"`로 검사를 통과해야 다음 단계로 간다. 단계와 검사는 `tools/flows/*.toml`에 있고, log · index · check · push까지 흐름이 챙긴다.
+**자동화는 CLI로:** 점검 · 목차 · 기록 · 흐름 · 최신 확인 · 세팅 반영은 모두 `yw-wiki` 명령(Rust CLI, 세팅의 `cli/`)이 한다. 스크립트를 따로 만들지 않고, 사람 · AI · 훅이 같은 명령을 돌린다.
+
+**흐름 하네스:** 업데이트 · 찾기 · 검토 · 점검은 `yw-wiki flow start <update|update-code|query|review|lint>`로 시작하고, 단계마다 `yw-wiki flow done --note "…"`로 검사를 통과해야 다음 단계로 간다. 단계와 검사는 `tools/flows/*.toml`에 있고, log · index · check · push까지 흐름이 챙긴다.
 
 규칙 문서(AGENTS.md · SKILL.md · 흐름 파일)는 하나당 200줄 이하로, 작은 단위로 나눠 쓴다. 길어지면 흐름 단계나 별도 스킬로 옮긴다.
 
@@ -72,13 +74,13 @@ review/           사람 검토 대기열. 위키에 넣지 않은 충돌 · 미
 
 ## 5. git
 
-- **최신 확인:** 모든 스킬은 시작할 때 `python3.14 tools/version.py`를 돌린다. main 브랜치인지 · origin/main보다 뒤처지지 않았는지 · 세팅 최신 릴리스인지 · Obsidian 플러그인이 맞는지 보고, 받을 수 있으면 받는다. 세션을 시작할 때도 훅이 같은 확인을 한다. 경고(⚠)가 나오면 그것부터 사람에게 알린다.
+- **최신 확인:** 모든 스킬은 시작할 때 `yw-wiki version`을 돌린다. main 브랜치인지 · origin/main보다 뒤처지지 않았는지 · 세팅 최신 릴리스인지 · Obsidian 플러그인이 맞는지 보고, 받을 수 있으면 받는다. 세션을 시작할 때도 훅이 같은 확인을 한다. 경고(⚠)가 나오면 그것부터 사람에게 알린다.
 - 갱신: 모든 스킬은 시작할 때 `git pull --rebase`로 원격 main을 받고, 끝나면 커밋하고 push한다. 브랜치와 PR 없이 main에서 작업한다 (구조 변경 같은 큰 작업만 브랜치).
 - rebase 충돌이 나면 멈추고 충돌로 넘긴다. force push는 하지 않는다.
-- 커밋 전에 `.githooks/pre-commit`이 `tools/check.py`를 돌린다. 오류가 있으면 커밋하지 않는다.
+- 커밋 전에 `.githooks/pre-commit`이 `yw-wiki check`를 돌린다. 오류가 있으면 커밋하지 않는다.
 
 ## 6. 하지 않는 것
 
 - `raw/`를 고치거나 지우기.
 - 비밀번호 · 토큰 · 주민번호 · 계좌 · 개인 연락처를 어디에든 적기.
-- 템플릿 없이 페이지 만들기, 세팅 관리 파일(`_templates/` · `tools/` · `.claude/skills/` · AGENTS.md의 core · profile 구간)을 위키에서 직접 고치기. 바꿀 것은 세팅 프로젝트에 반영하고 `wiki-setting upgrade`로 내려받는다.
+- 템플릿 없이 페이지 만들기, 세팅 관리 파일(`_templates/` · `tools/` · `.claude/skills/` · AGENTS.md의 core · profile 구간)을 위키에서 직접 고치기. 바꿀 것은 세팅 프로젝트에 반영하고 `yw-wiki setting upgrade`로 내려받는다.

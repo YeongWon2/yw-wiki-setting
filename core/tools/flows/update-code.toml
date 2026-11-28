@@ -6,7 +6,7 @@ title = "코드 저장소 업데이트"
 [[step]]
 id = "start"
 do = "최신 확인과 원격 받기. ⚠가 보이면 사람에게 먼저 알린다."
-gates = ["run?:{py} tools/version.py", "pull"]
+gates = ["run?:{bin} version", "pull"]
 
 [[step]]
 id = "target"
@@ -81,8 +81,8 @@ gates = ["changed:wiki/synthesis/"]
 
 [[step]]
 id = "index-log"
-do = "`python3.14 tools/log.py update \"<프로젝트> 저장소 (<커밋>)\" \"source N\" \"새 guide M\" \"같음 N\" \"보강 N\" \"범위 N\" \"합침 N\" \"모순 N\"`"
-gates = ["run:{py} tools/index.py", "log:update"]
+do = "`yw-wiki log update \"<프로젝트> 저장소 (<커밋>)\" \"source N\" \"새 guide M\" \"같음 N\" \"보강 N\" \"범위 N\" \"합침 N\" \"모순 N\"`"
+gates = ["run:{bin} index", "log:update"]
 
 [[step]]
 id = "check"

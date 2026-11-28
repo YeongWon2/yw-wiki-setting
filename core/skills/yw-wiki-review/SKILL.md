@@ -9,12 +9,12 @@ description: "[{{wiki_name}}] 사람 검토 대기열(review/)을 보여 주고,
 
 ## 흐름 (하네스)
 
-단계는 `tools/flow.py`가 하나씩 안내하고, 검사를 통과해야 다음으로 넘긴다. 단계를 건너뛰거나 순서를 바꾸지 않는다.
+단계는 `yw-wiki flow`가 하나씩 안내하고, 검사를 통과해야 다음으로 넘긴다. 단계를 건너뛰거나 순서를 바꾸지 않는다.
 
 ```sh
-python3.14 tools/flow.py start review
-python3.14 tools/flow.py done --note "<이 단계에서 한 일 · 사용자 답>"   # 검사 실패면 고치고 다시
-python3.14 tools/flow.py next                                        # 지금 단계 다시 보기
+yw-wiki flow start review
+yw-wiki flow done --note "<이 단계에서 한 일 · 사용자 답>"   # 검사 실패면 고치고 다시
+yw-wiki flow next                                        # 지금 단계 다시 보기
 ```
 
 각 단계의 할 일과 검사는 `tools/flows/review.toml`에 있다. optional 단계만 `skip --note "이유"`로 넘길 수 있다.

@@ -1,0 +1,26 @@
+[package]
+name = "yw-wiki"
+version = "0.0.0"  # 실제 버전은 세팅 VERSION 파일 (src/main.rs에서 읽는다)
+edition = "2021"
+description = "개인 LLM 위키 자동화 CLI: 점검 · 목차 · 기록 · 흐름 하네스 · 최신 확인 · 세팅 반영"
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "yw-wiki"
+path = "src/main.rs"
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+fancy-regex = "0.14"
+serde_json = { version = "1", features = ["preserve_order"] }
+sha2 = "0.10"
+serde = "1"
+shlex = "1.3"
+toml = { version = "0.8", features = ["preserve_order"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = true

@@ -4,7 +4,7 @@ title = "찾기"
 [[step]]
 id = "start"
 do = "최신 확인과 원격 받기."
-gates = ["run?:{py} tools/version.py", "pull"]
+gates = ["run?:{bin} version", "pull"]
 
 [[step]]
 id = "entry"
@@ -27,8 +27,8 @@ gates = ["note"]
 [[step]]
 id = "save"
 optional = true
-do = "여러 페이지를 묶은 답이고 다시 물을 만하면 wiki/synthesis/에 저장(related에 묶은 페이지) → index → `log.py query \"<질문 요약>\"`. 한 번 묻고 끝날 답이면 skip."
-gates = ["changed:wiki/synthesis/", "run:{py} tools/index.py", "log:query", "check"]
+do = "여러 페이지를 묶은 답이고 다시 물을 만하면 wiki/synthesis/에 저장(related에 묶은 페이지) → index → `yw-wiki log query \"<질문 요약>\"`. 한 번 묻고 끝날 답이면 skip."
+gates = ["changed:wiki/synthesis/", "run:{bin} index", "log:query", "check"]
 
 [[step]]
 id = "push"

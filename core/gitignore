@@ -3,14 +3,14 @@
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/workspaces.json
-# 그래프 화면 상태. 기본 필터는 tools/plugins.py가 없을 때만 깐다
+# 그래프 화면 상태. 기본 필터는 yw-wiki plugins가 없을 때만 깐다
 .obsidian/graph.json
 # 속성 종류 — 자동으로 갱신됨
 .obsidian/types.json
 .obsidian/cache
 .trash/
 
-# ── 플러그인 코드: tools/plugins.py가 버전 · sha256 고정으로 설치한다 (설정 data.json은 올린다) ──
+# ── 플러그인 코드: yw-wiki plugins가 버전 · sha256 고정으로 설치한다 (설정 data.json은 올린다) ──
 .obsidian/plugins/*/main.js
 .obsidian/plugins/*/styles.css
 .obsidian/plugins/*/manifest.json

@@ -9,7 +9,9 @@ SETTING=$(cd "$(dirname "$0")" && pwd)
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 export YW_TODAY=$(date +%F)
-PY=$(command -v python3.15 || command -v python3.14 || echo /opt/homebrew/bin/python3.14)
+cargo build --quiet --release --manifest-path "$SETTING/cli/Cargo.toml" || { echo "실패: cli 빌드"; exit 1; }
+BUILT="$SETTING/cli/target/release/yw-wiki"
+export YW_NO_BUILD=1
 fail() { echo "실패: $1"; exit 1; }
 ok() { echo "통과: $1"; }
 
@@ -20,11 +22,14 @@ export HOME="$TMP/home"; mkdir -p "$HOME/.cache"
 cp -R "$REAL_HOME/.cache/yw-wiki" "$HOME/.cache/" 2>/dev/null || true
 git clone -q "$SETTING" "$TMP/setting" && git -C "$TMP/setting" remote remove origin
 cp "$SETTING"/VERSION "$TMP/setting/VERSION"
-for f in $(git -C "$SETTING" -c core.quotepath=false diff --name-only --diff-filter=d HEAD; git -C "$SETTING" -c core.quotepath=false ls-files --others --exclude-standard); do
-  mkdir -p "$TMP/setting/$(dirname "$f")"; cp "$SETTING/$f" "$TMP/setting/$f"   # 커밋 전 변경도 시험한다
-done
-for f in $(git -C "$SETTING" -c core.quotepath=false diff --name-only --diff-filter=D HEAD); do rm -f "$TMP/setting/$f"; done   # 커밋 전 삭제도
-"$PY" "$TMP/setting/global/wiki-vault/bin/wiki-setting" install >/dev/null
+# 커밋 전 변경 · 삭제도 시험한다 (이름에 공백이 있어도 한 줄씩)
+{ git -C "$SETTING" -c core.quotepath=false diff --name-only --diff-filter=d HEAD; git -C "$SETTING" -c core.quotepath=false ls-files --others --exclude-standard; } |
+while IFS= read -r f; do mkdir -p "$TMP/setting/$(dirname "$f")"; cp "$SETTING/$f" "$TMP/setting/$f"; done
+git -C "$SETTING" -c core.quotepath=false diff --name-only --diff-filter=D HEAD | while IFS= read -r f; do rm -f "$TMP/setting/$f"; done
+# install.sh가 하는 것처럼 실행 파일을 ~/.local/bin에 두고 길잡이를 깐다
+mkdir -p "$HOME/.local/bin" && cp "$BUILT" "$HOME/.local/bin/yw-wiki"
+BIN="$HOME/.local/bin/yw-wiki"; export PATH="$HOME/.local/bin:$PATH"
+"$BIN" setting install --from "$TMP/setting" >/dev/null
 printf 'version = 1\ndefault = "personal"\n\n[setting]\npath = "%s"\n' "$TMP/setting" > "$HOME/.config/wiki/vaults.toml"
 WS="$HOME/.claude/skills/wiki-vault/bin/wiki-setting"
 
@@ -39,7 +44,7 @@ for src in "$PERSONAL"; do
   git -C "$A" push -q -f origin "$(git -C "$src" rev-parse HEAD):refs/heads/main"
   git -C "$A" fetch -q origin && git -C "$A" checkout -q -B main origin/main
   git clone -q -b main "$TMP/$name.git" "$B"
-  "$PY" "$WS" register "$A" >/dev/null
+  sh "$WS" register "$A" >/dev/null
   for W in "$A" "$B"; do
     git -C "$W" checkout -q main 2>/dev/null || git -C "$W" checkout -q -b main
     git -C "$W" config core.hooksPath .githooks; git -C "$W" config user.name e2e; git -C "$W" config user.email e2e@example.invalid
@@ -47,12 +52,13 @@ for src in "$PERSONAL"; do
   done
 
   # 0. 시험할 세팅(이 폴더)으로 올린다: A에서 upgrade · 커밋 · push, B는 받는다
-  "$PY" "$TMP/setting/scripts/upgrade.py" "$A" --yes >/dev/null
+  "$BIN" upgrade "$A" --yes --setting "$TMP/setting" >/dev/null
+  ls "$A"/tools/*.py >/dev/null 2>&1 && fail "$name upgrade 뒤 Python 도구가 남음"
   git -C "$A" add -A && { git -C "$A" diff --cached --quiet || git -C "$A" commit -qm "e2e: 시험할 세팅으로 upgrade"; }
   git -C "$A" push -q origin main && git -C "$B" pull -q --rebase origin main
 
   # 1. 세션 시작 훅 (.claude/settings.json의 명령 그대로)
-  CMD=$("$PY" -c "import json,sys;print(json.load(open(sys.argv[1]))['hooks']['SessionStart'][0]['hooks'][0]['command'])" "$A/.claude/settings.json")
+  CMD=$(sed -n 's/^ *"command": "\(.*\)",$/\1/p' "$A/.claude/settings.json" | sed 's/\\"/"/g')
   OUT=$(CLAUDE_PROJECT_DIR="$A" sh -c "$CMD")
   echo "$OUT" | grep -q "main" || fail "$name 세션 훅: $OUT"
   ok "$name 세션 훅 — $OUT"
@@ -64,8 +70,8 @@ for src in "$PERSONAL"; do
   sed -e "s/{{title}}/e2e 시험/g" -e "s/{{date}}/$YW_TODAY/g" -e 's/^source_kind:.*/source_kind: doc/' \
       -e "s#^sources: \[\]#sources: [\"$RAW/$YW_TODAY e2e 시험.md\"]#" -e 's/^related: \[\]/related: ["[[황영원]]"]/' \
       "$A/_templates/source.md" > "$A/wiki/sources/e2e 시험.md"
-  "$PY" "$A/tools/index.py" "$A" >/dev/null
-  "$PY" "$A/tools/log.py" "$A" update "e2e 시험" "source 1" >/dev/null
+  "$BIN" index "$A" >/dev/null
+  "$BIN" log "$A" update "e2e 시험" "source 1" >/dev/null
   git -C "$A" add -A
   git -C "$A" commit -qm "e2e: 업데이트" || fail "$name 업데이트 커밋이 점검 훅에 막힘"
   grep -q "\[\[e2e 시험\]\]" "$A/wiki/index.md" || fail "$name index에 새 source 없음"
@@ -79,10 +85,10 @@ for src in "$PERSONAL"; do
   sed -e "s/{{title}}/e2e 충돌/g" -e "s/{{date}}/$YW_TODAY/g" -e 's/^review_kind:.*/review_kind: conflict/' \
       -e 's/^page:.*/page: "[[e2e 시험]]"/' -e 's/^found_by:.*/found_by: update/' "$A/_templates/review.md" > "$A/review/$YW_TODAY e2e 충돌.md"
   git -C "$A" add -A && git -C "$A" commit -qm "e2e: review 항목" || fail "$name review 항목 커밋 실패"
-  "$PY" "$A/tools/check.py" "$A" | grep -q "검토 대기" || fail "$name review 대기 경고 없음"
+  "$BIN" check "$A" | grep -q "검토 대기" || fail "$name review 대기 경고 없음"
   sed -i.bak 's/^- 시험 사실.*//' "$A/wiki/sources/e2e 시험.md" && rm "$A/wiki/sources/e2e 시험.md.bak"
   git -C "$A" rm -q "review/$YW_TODAY e2e 충돌.md"
-  "$PY" "$A/tools/log.py" "$A" review "e2e 충돌" "정함 1" >/dev/null
+  "$BIN" log "$A" review "e2e 충돌" "정함 1" >/dev/null
   git -C "$A" add -A && git -C "$A" commit -qm "e2e: 리뷰 반영" || fail "$name 리뷰 반영 커밋 실패"
   ok "$name 충돌 → review/ → 리뷰 반영"
 
@@ -97,29 +103,29 @@ for src in "$PERSONAL"; do
   printf -- '---\ntype: note\n---\n\n# 짧은 PATH 메모\n' > "$A/raw/짧은 PATH.md" 2>/dev/null || { mkdir -p "$A/raw"; printf -- '# 짧은 PATH 메모\n' > "$A/raw/짧은 PATH.md"; }
   git -C "$A" add -A
   env -i HOME="$HOME" PATH=/usr/bin:/bin git -C "$A" -c user.name=obs -c user.email=o@example.invalid commit -qm "obsidian: 메모" \
-    || fail "$name 짧은 PATH에서 커밋 실패 (훅이 python3.14를 못 찾음)"
+    || fail "$name 짧은 PATH에서 커밋 실패 (훅이 yw-wiki를 못 찾음)"
   ok "$name 짧은 PATH(Obsidian) 커밋"
-  # 앞선 커밋은 version.py가 push한다 (원격 main과 같게)
-  "$PY" "$A/tools/version.py" "$A" --force | grep -q "push" || fail "$name 앞선 커밋을 push하지 않음"
+  # 앞선 커밋은 yw-wiki version이 push한다 (원격 main과 같게)
+  "$BIN" version "$A" --force | grep -q "push" || fail "$name 앞선 커밋을 push하지 않음"
   [ -z "$(git -C "$A" rev-list origin/main..HEAD)" ] || fail "$name push 뒤에도 원격보다 앞섬"
   ok "$name 앞선 커밋 자동 push"
 
-  # 6. 다른 기기(B): 원격이 앞서 있으면 version.py가 받는다
-  "$PY" "$B/tools/version.py" "$B" --force > "$TMP/v" || true
+  # 6. 다른 기기(B): 원격이 앞서 있으면 yw-wiki version이 받는다
+  "$BIN" version "$B" --force > "$TMP/v" || true
   grep -q "origin/main에서 .*개 받음" "$TMP/v" || { cat "$TMP/v"; fail "$name 다른 기기에서 원격 앞선 것을 받지 않음"; }
   [ -f "$B/wiki/sources/e2e 시험.md" ] || fail "$name 받은 뒤 파일 없음"
   ok "$name 다른 기기 자동 받기 — $(cat "$TMP/v")"
 
   # 7. main이 아니면 경고
   git -C "$B" checkout -q -b 다른-브랜치
-  "$PY" "$B/tools/version.py" "$B" --force | grep -q "main 기준이 아니다" || fail "$name main 아님 경고 없음"
+  "$BIN" version "$B" --force | grep -q "main 기준이 아니다" || fail "$name main 아님 경고 없음"
   ok "$name main 아닌 브랜치 경고"
 done
 
 # 8. 길잡이: 목록 · 경로 · 확인 · doctor (임시 HOME의 등록)
-"$PY" "$WS" list | grep -q "^personal.*: " || fail "길잡이 목록"
-[ -d "$("$PY" "$WS" path personal)" ] || fail "길잡이 경로"
-"$PY" "$WS" check > "$TMP/c" 2>&1 || true
+sh "$WS" list | grep -q "^personal.*: " || fail "길잡이 목록"
+[ -d "$(sh "$WS" path personal)" ] || fail "길잡이 경로"
+sh "$WS" check > "$TMP/c" 2>&1 || true
 grep -q "세팅 v$(cat "$SETTING/VERSION")" "$TMP/c" || { cat "$TMP/c"; fail "길잡이 check"; }
 ok "길잡이 목록 · 경로 · check — $(cut -c1-140 "$TMP/c")"
 echo "e2e 통과"
