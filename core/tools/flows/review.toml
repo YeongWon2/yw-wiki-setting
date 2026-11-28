@@ -4,7 +4,7 @@ title = "검토"
 [[step]]
 id = "start"
 do = "최신 확인과 원격 받기."
-gates = ["run?:{py} tools/version.py", "pull"]
+gates = ["run?:{bin} version", "pull"]
 
 [[step]]
 id = "show"
@@ -22,8 +22,8 @@ gates = ["note"]
 id = "apply"
 optional = true
 do = """정한 내용을 템플릿 형식으로 위키에 쓴다(Key facts · Timeline, 새 decision accepted + 이전 superseded, 나누기 · 합치기 · archived).
-guide 병합 초안(duplicate · conflict)을 정했으면 초안대로 합치고 없앤 쪽은 superseded, `log.py merge`.
-guide '맞다' → owner_checked: true · owner_checked_on · `log.py confirm \"<페이지>\" \"<원문>\"`. 정함이 없으면 skip."""
+guide 병합 초안(duplicate · conflict)을 정했으면 초안대로 합치고 없앤 쪽은 superseded, `yw-wiki log merge`.
+guide '맞다' → owner_checked: true · owner_checked_on · `yw-wiki log confirm \"<페이지>\" \"<원문>\"`. 정함이 없으면 skip."""
 gates = ["changed:wiki/"]
 
 [[step]]
@@ -33,8 +33,8 @@ gates = ["note"]
 
 [[step]]
 id = "index-log"
-do = "`python3.14 tools/log.py review \"<요약>\" \"정함 N\" \"보류 M\" \"버림 K\"`"
-gates = ["run:{py} tools/index.py", "log:review"]
+do = "`yw-wiki log review \"<요약>\" \"정함 N\" \"보류 M\" \"버림 K\"`"
+gates = ["run:{bin} index", "log:review"]
 
 [[step]]
 id = "check"

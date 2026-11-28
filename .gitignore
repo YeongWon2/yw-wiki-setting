@@ -19,3 +19,4 @@ raw/assets/**/*.mov
 .DS_Store
 Thumbs.db
 __pycache__/
+cli/target/

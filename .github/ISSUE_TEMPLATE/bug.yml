@@ -40,4 +40,4 @@ body:
     id: env
     attributes:
       label: 환경
-      placeholder: 세팅 버전(VERSION), OS, Python 버전
+      placeholder: 세팅 버전(VERSION), OS, `yw-wiki --version`

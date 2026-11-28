@@ -1,20 +1,20 @@
-# 점검: check.py로 보고, 기계적인 것은 고치고, 판단할 것은 review/로.
+# 점검: yw-wiki check로 보고, 기계적인 것은 고치고, 판단할 것은 review/로.
 title = "점검"
 
 [[step]]
 id = "start"
 do = "최신 확인과 원격 받기."
-gates = ["run?:{py} tools/version.py", "pull"]
+gates = ["run?:{bin} version", "pull"]
 
 [[step]]
 id = "scan"
-do = "점검 결과를 본다(무엇을 보는지는 tools/check.py 맨 위 설명). note에 오류 · 경고 수."
-gates = ["run?:{py} tools/check.py", "note"]
+do = "점검 결과를 본다(무엇을 보는지는 `yw-wiki check --help`). note에 오류 · 경고 수."
+gates = ["run?:{bin} check", "note"]
 
 [[step]]
 id = "fix"
 do = """묻지 않고 고친다: index 최신화, frontmatter 빠진 필드 · 날짜 형식, 빠진 템플릿 제목, 후보가 하나뿐인 깨진 링크, Key facts 12개 초과 나누기.
-guide 겹침은 이름이 아니라 본문으로 찾는다: 같은 scope · 같은 분야 지도 안의 guide끼리 Rules를 대조한다(check.py는 이름만 본다).
+guide 겹침은 이름이 아니라 본문으로 찾는다: 같은 scope · 같은 분야 지도 안의 guide끼리 Rules를 대조한다(yw-wiki check는 이름만 본다).
 중복(같은 규칙, 몇 줄만 겹쳐도)은 고치지 않고 review/에 병합 초안(duplicate)을 남긴다.
 충돌(같은 대상에 규칙이 다름)도 고치지 않고 review/에 병합 초안(conflict)을 남긴다. 합치기는 사람이 review에서 정한 뒤에만 한다. 없으면 note에 '없음'."""
 gates = ["note"]
@@ -32,8 +32,8 @@ gates = ["check"]
 
 [[step]]
 id = "log"
-do = "`python3.14 tools/log.py lint \"<요약>\" \"고침 N\" \"review K\"`"
-gates = ["run:{py} tools/index.py", "log:lint"]
+do = "`yw-wiki log lint \"<요약>\" \"고침 N\" \"review K\"`"
+gates = ["run:{bin} index", "log:lint"]
 
 [[step]]
 id = "push"
