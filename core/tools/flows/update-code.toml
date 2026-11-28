@@ -71,7 +71,7 @@ gates = ["changed:wiki/sources/"]
 id = "guides"
 do = """고른 후보를 guide로: 규칙 · 아키텍처 구조 규칙 · 작성 방식은 convention, 방법론 · 파이프라인은 playbook, 설계 판단 기준은 principle.
 제목 `<프로젝트> 방식 - …`(scope project:) 또는 `<회사> 방식 - …`(scope org:) + stack: · domain:. Rules · How it was done · Evidence(파일 · 커밋 · PR) 필수. Evidence는 내 커밋 · 내가 쓴 줄만.
-무엇인가 설명은 concept, 저장소의 결정은 decision. 기존 guide는 합치기 판정(같음이면 Evidence 한 줄)."""
+무엇인가 설명은 concept, 저장소의 결정은 decision. 기존 guide는 합치기 판정(같음이면 Evidence 한 줄, 기존 guide끼리 중복 · 충돌이면 review/에 병합 초안)."""
 gates = ["changed:wiki/guides/"]
 
 [[step]]
